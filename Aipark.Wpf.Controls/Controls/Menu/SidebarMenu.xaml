@@ -1,0 +1,177 @@
+﻿<UserControl x:Class="Aipark.Wpf.Controls.SidebarMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:cvt="clr-namespace:Aipark.Wpf.Converters"
+             xmlns:local="clr-namespace:Aipark.Wpf.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="400" d:DesignWidth="200">
+
+    <UserControl.Resources>
+        <cvt:NullableImageSourceConverter x:Key="NullableImageSourceConverter"/>
+
+        <LinearGradientBrush x:Key="LinearGradientBrush" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#0EA8E8" Offset="0"/>
+            <GradientStop Color="#057BC2" Offset="1"/>
+        </LinearGradientBrush>
+
+        <Style x:Key="PrimaryMenuItemStyle" TargetType="{x:Type RadioButton}">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Padding" Value="9,0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type RadioButton}">
+                        <Border x:Name="border" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}" 
+                                CornerRadius="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:SidebarMenu}},Path=CornerRadius}" 
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="contentPresenter" RecognizesAccessKey="True" SnapsToDevicePixels="True" 
+                                              TextBlock.FontFamily="{TemplateBinding FontFamily}" 
+                                              TextBlock.FontSize="{TemplateBinding FontSize}" Focusable="False" 
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasContent" Value="true">
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Background" Value="{StaticResource LinearGradientBrush}" TargetName="border"/>
+                                <Setter Property="BorderBrush" Value="#3BB6EA" TargetName="border"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter Property="Background" Value="{StaticResource LinearGradientBrush}" TargetName="border"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter Property="Background" Value="{StaticResource LinearGradientBrush}" TargetName="border"/>
+                                <Setter Property="BorderBrush" Value="#3BB6EA" TargetName="border"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryMenuItemStyle" TargetType="{x:Type RadioButton}">
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type RadioButton}">
+                        <Border x:Name="border" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:SidebarMenu}},Path=CornerRadius}" 
+                                SnapsToDevicePixels="True">
+                            <Grid SnapsToDevicePixels="True">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="36"/>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Image Source="{Binding Icon,Converter={StaticResource NullableImageSourceConverter}}" Width="{Binding IconWidth}" Height="{Binding IconHeight}" Stretch="Uniform" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <ContentPresenter x:Name="contentPresenter" Grid.Column="1" RecognizesAccessKey="True" SnapsToDevicePixels="True" 
+                                                  TextBlock.Foreground="{TemplateBinding Foreground}" 
+                                                  TextBlock.FontFamily="{TemplateBinding FontFamily}" 
+                                                  TextBlock.FontSize="{TemplateBinding FontSize}" Focusable="False" 
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  Margin="12,1,9,0"/>
+                                <Image x:Name="arrow" Grid.Column="2" Source="pack://application:,,,/Aipark.Wpf.Controls;component/Resources/Images/arrow.png" RenderTransformOrigin="0.5,0.5"
+                                       Width="16" Height="16" Stretch="Uniform" Margin="0,0,12,0" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Collapsed">
+                                    <Image.RenderTransform>
+                                        <RotateTransform Angle="225"/>
+                                    </Image.RenderTransform>
+                                </Image>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasContent" Value="true">
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Background" Value="#BEE6FD" TargetName="border"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter Property="Background" Value="#91D5FF" TargetName="border"/>
+                                <Setter Property="BorderThickness" Value="2,1" TargetName="border"/>
+                                <Setter Property="BorderBrush" Value="Transparent" TargetName="border"/>
+                                <Setter Property="Padding" Value="0,1,0,0" TargetName="border"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter Property="Visibility" Value="Visible" TargetName="arrow"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed" TargetName="arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="PrimaryMenuItemDataTemplate">
+            <RadioButton Style="{StaticResource PrimaryMenuItemStyle}" GroupName="primary" DataContext="{Binding}" IsChecked="{Binding IsChecked}"
+                         Padding="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:SidebarMenu}},Path=InnerPadding}" 
+                         Margin="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:SidebarMenu}},Path=InnerMargin}"
+                         Click="PrimaryMenuItem_Click">
+                <RadioButton.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding Icon}" Width="{Binding IconWidth}" Height="{Binding IconHeight}" Stretch="Uniform" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Name}" Foreground="White" Margin="{Binding NameMargin}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </RadioButton.Content>
+            </RadioButton>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SecondaryMenuItemDataTemplate">
+            <RadioButton Style="{StaticResource SecondaryMenuItemStyle}" GroupName="secondary" DataContext="{Binding}" 
+                         Height="32" Content="{Binding Name}" IsChecked="{Binding IsChecked,Mode=OneWay}"
+                         Margin="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:SidebarMenu}},Path=InnerMargin}"
+                         Click="SecondaryMenuItem_Click">
+            </RadioButton>
+        </DataTemplate>
+
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Border x:Name="border" Height="32" Background="#057BC2" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0">
+                <Image Source="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:SidebarMenu}},Path=ParentMenuItem.Icon}" 
+                       Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:SidebarMenu}},Path=ParentMenuItem.Name}" Foreground="White" 
+                           Margin="12,1,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+            <!--<TextBlock x:Name="headerTextBlock" Text="车辆处理" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="32,0,0,0"/>-->
+        </Border>
+
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
+            <ItemsControl x:Name="itemsControl" ItemTemplate="{StaticResource PrimaryMenuItemDataTemplate}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:SidebarMenu}},Path=Orientation}"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

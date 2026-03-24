@@ -1,0 +1,33 @@
+﻿<local:BaseShape x:Class="Aipark.Wpf.Controls.CubeShape"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+                 xmlns:local="clr-namespace:Aipark.Wpf.Controls"
+                 mc:Ignorable="d" 
+                 IsHitTestVisible="{Binding IsHitTestVisible}"
+                 Visibility="{Binding Visibility}"
+                 d:DesignHeight="200" d:DesignWidth="200"
+                 Loaded="BaseShape_Loaded">
+
+    <UserControl.Resources>
+        <Style x:Key="CornerThumbStyle" TargetType="{x:Type Thumb}">
+            <Setter Property="Cursor" Value="Arrow"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Grid Width="15" Height="15">
+                            <Ellipse Fill="Blue" Opacity="0.75"/>
+                            <TextBlock FontSize="10" Text="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type Thumb},AncestorLevel=1},Path=Tag}" 
+                                       Foreground="White" FontFamily="Times New Roman" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid x:Name="rootGrid">
+        <Canvas x:Name="rootCanvas" Width="{Binding ElementName=rootGrid,Path=ActualWidth}" Height="{Binding ElementName=rootGrid,Path=ActualHeight}"/>
+    </Grid>
+</local:BaseShape>

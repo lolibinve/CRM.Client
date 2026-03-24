@@ -1,0 +1,164 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Aipark.Wpf.Controls">
+
+    <Style x:Key="WindowSettingsButtonStyle" TargetType="{x:Type Button}">
+        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonWidth}"/>
+        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonHeight}"/>
+        <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonForeground}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="border" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Background="{TemplateBinding Background}">
+                        <Path x:Name="path" Width="16" Height="11" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,0 L15,0 M0,5 L15,5 M0,10 L15,10" 
+                              StrokeThickness="1" RenderOptions.EdgeMode="Aliased" SnapsToDevicePixels="True" Stretch="None"                              
+                              Stroke="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True"/>
+                        <Trigger Property="IsDefaulted" Value="True"/>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonMouseOverBackground}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonPressedBackground}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="WindowAboutButtonStyle" TargetType="{x:Type Button}">
+        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonWidth}"/>
+        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonHeight}"/>
+        <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonForeground}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Grid x:Name="buttonAbout" Background="{TemplateBinding Background}" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Rectangle Height="2" Width="11" Fill="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                            <Polygon Grid.Row="1" Points="0,0 11,0 11,1 5.5,6 0,1" Fill="{TemplateBinding Foreground}" Margin="0,1,0,0" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                        </Grid>
+                        <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" RecognizesAccessKey="True"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True"/>
+                        <Trigger Property="IsDefaulted" Value="True"/>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonMouseOverBackground}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonPressedBackground}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False"/>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="WindowMinimizeButtonStyle" TargetType="{x:Type Button}">
+        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonWidth}"/>
+        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonHeight}"/>
+        <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonForeground}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="border" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Background="{TemplateBinding Background}">
+                        <Path x:Name="path" Width="12" Height="1" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,0 L11,0" 
+                              StrokeThickness="1" RenderOptions.EdgeMode="Aliased" SnapsToDevicePixels="True" Stretch="None"                              
+                              Stroke="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True"/>
+                        <Trigger Property="IsDefaulted" Value="True"/>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonMouseOverBackground}" TargetName="border"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonPressedBackground}" TargetName="border"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style x:Key="WindowMaximizeButtonStyle" TargetType="{x:Type ToggleButton}">
+        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonWidth}"/>
+        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonHeight}"/>
+        <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonForeground}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                    <Border x:Name="border" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Background="{TemplateBinding Background}">
+                        <Path x:Name="path" Width="11" Height="11" Data="M0,0 L10,0 10,10 0,10Z" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                              StrokeThickness="1" RenderOptions.EdgeMode="Aliased" SnapsToDevicePixels="True" Stretch="None" 
+                              Stroke="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True"/>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonMouseOverBackground}" TargetName="border"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonPressedBackground}" TargetName="border"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="path" Property="Width" Value="12" />
+                            <Setter TargetName="path" Property="Height" Value="12" />
+                            <Setter TargetName="path" Property="Data" Value="M2,2 L2,0 11,0 11,9 9,9 9,2 0,2 0,11 9,11 9,9" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style x:Key="WindowCloseButtonStyle" TargetType="{x:Type Button}">
+        <Setter Property="Width" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonWidth}"/>
+        <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonHeight}"/>
+        <Setter Property="Foreground" Value="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:TWindow}},Path=WindowButtonForeground}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Border x:Name="border" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Background="{TemplateBinding Background}">
+                        <Path Width="13" Height="13" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M0,0 L12,12 M0,12 L12,0" 
+                              StrokeThickness="1" RenderOptions.EdgeMode="Aliased" SnapsToDevicePixels="True" Stretch="None" 
+                              Stroke="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True"/>
+                        <Trigger Property="IsDefaulted" Value="True"/>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#F7546A" TargetName="border"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="Red" TargetName="border"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

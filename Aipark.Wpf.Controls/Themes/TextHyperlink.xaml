@@ -1,0 +1,33 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Aipark.Wpf.Controls">
+
+    <Style TargetType="{x:Type local:TextHyperlink}">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="Green"/>
+        <Setter Property="HoverForeground" Value="Blue"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:TextHyperlink}">
+                    <TextBlock x:Name="TemplatePart_TextBlock">
+                        <Hyperlink x:Name="hyperlink" IsEnabled="{TemplateBinding IsEnabled}" TextDecorations="{x:Null}">
+                            <Run x:Name="run" Text="{TemplateBinding Text}" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}"/>
+                        </Hyperlink>
+                    </TextBlock>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="run" Property="Foreground" Value="{Binding RelativeSource={RelativeSource Mode= FindAncestor,AncestorType={x:Type local:TextHyperlink}},Path=HoverForeground}"/>
+                            <Setter TargetName="hyperlink" Property="Foreground" Value="{Binding RelativeSource={RelativeSource Mode= FindAncestor,AncestorType={x:Type local:TextHyperlink}},Path=HoverForeground}"/>
+                            <Setter TargetName="hyperlink" Property="TextBlock.TextDecorations" Value="UnderLine"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="run" Property="Foreground" Value="Silver"/>
+                            <Setter TargetName="hyperlink" Property="Foreground" Value="Silver"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,103 @@
+﻿<UserControl x:Class="Aipark.Wpf.Controls.SuperImage.ImageEx"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Aipark.Wpf.Controls.SuperImage"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             BorderBrush="Silver" BorderThickness="1"
+             Background="#F9FAFC">
+
+    <UserControl.Resources>
+        <Storyboard x:Key="FlashingStoryboard">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="flashingRectangle" Storyboard.TargetProperty="StrokeThickness" BeginTime="00:00:00" Duration="00:00:01" AutoReverse="True" RepeatBehavior="5x">
+                <DoubleAnimationUsingKeyFrames.KeyFrames>
+                    <EasingDoubleKeyFrame KeyTime="00:00:00" Value="0" />
+                    <EasingDoubleKeyFrame KeyTime="00:00:01" Value="10" />
+                </DoubleAnimationUsingKeyFrames.KeyFrames>
+            </DoubleAnimationUsingKeyFrames>
+
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="flashingRectangle" Storyboard.TargetProperty="Opacity" BeginTime="00:00:00" Duration="00:00:01" AutoReverse="True" RepeatBehavior="5x">
+                <DoubleAnimationUsingKeyFrames.KeyFrames>
+                    <EasingDoubleKeyFrame KeyTime="00:00:00" Value="1" />
+                    <EasingDoubleKeyFrame KeyTime="00:00:01" Value="0.75" />
+                </DoubleAnimationUsingKeyFrames.KeyFrames>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid x:Name="RootGrid" Background="Transparent" ClipToBounds="True" 
+          MouseRightButtonDown="RootGrid_MouseRightButtonDown"
+          MouseWheel="RootGrid_MouseWheel"
+          SizeChanged="RootGrid_SizeChanged">
+        <!--底图-->
+        <Image x:Name="layerImage" IsHitTestVisible="False" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <!--变幻图-->
+        <Image x:Name="transformImage" IsHitTestVisible="False"
+               Stretch="{Binding ElementName=layerImage,Path=Stretch}" 
+               Width="{Binding ElementName=layerImage,Path=ActualWidth}"
+               Height="{Binding ElementName=layerImage,Path=ActualHeight}"
+               HorizontalAlignment="{Binding ElementName=layerImage,Path=HorizontalAlignment}"
+               VerticalAlignment="{Binding ElementName=layerImage,Path=VerticalAlignment}"
+               Margin="{Binding ElementName=layerImage,Path=Margin}"/>
+        <!--拖放-->
+        <Thumb x:Name="dragThumb" 
+               MouseMove="DragThumb_MouseMove"
+               MouseLeave="DragThumb_MouseLeave"
+               DragStarted="DragThumb_DragStarted" 
+               DragDelta="DragThumb_DragDelta" 
+               DragCompleted="DragThumb_DragCompleted"
+               Width="{Binding ElementName=layerImage,Path=ActualWidth}"
+               Height="{Binding ElementName=layerImage,Path=ActualHeight}"
+               HorizontalAlignment="{Binding ElementName=layerImage,Path=HorizontalAlignment}"
+               VerticalAlignment="{Binding ElementName=layerImage,Path=VerticalAlignment}"
+               Margin="{Binding ElementName=layerImage,Path=Margin}">
+            <Thumb.Template>
+                <ControlTemplate>
+                    <Rectangle Fill="Transparent" Opacity="0.1"/>
+                </ControlTemplate>
+            </Thumb.Template>
+        </Thumb>
+        <!--闪烁效果-->
+        <Rectangle x:Name="flashingRectangle" StrokeThickness="0" Fill="Transparent" Opacity="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False">
+            <Rectangle.Stroke>
+                <SolidColorBrush x:Name="flashingColorBrush" Color="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:ImageEx}},Path=FlashingColor}" />
+            </Rectangle.Stroke>
+        </Rectangle>
+        <!--绘图-->
+        <Canvas x:Name="drawCanvas" Width="{Binding ElementName=layerImage,Path=ActualWidth}"
+                Height="{Binding ElementName=layerImage,Path=ActualHeight}"
+                HorizontalAlignment="{Binding ElementName=layerImage,Path=HorizontalAlignment}"
+                VerticalAlignment="{Binding ElementName=layerImage,Path=VerticalAlignment}"
+                Margin="{Binding ElementName=layerImage,Path=Margin}"
+                SizeChanged="DrawCanvas_SizeChanged"/>
+        <!--指示线-->
+        <local:BaselineControl x:Name="baselineControl" Visibility="Collapsed" IsHitTestVisible="False"
+                               Width="{Binding ElementName=layerImage,Path=ActualWidth}"
+                               Height="{Binding ElementName=layerImage,Path=ActualHeight}"
+                               HorizontalAlignment="{Binding ElementName=layerImage,Path=HorizontalAlignment}"
+                               VerticalAlignment="{Binding ElementName=layerImage,Path=VerticalAlignment}"
+                               Margin="{Binding ElementName=layerImage,Path=Margin}"
+                               BaselineStroke="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:ImageEx}},Path=BaselineStroke}"/>
+        <!--局部放大区-->
+        <Grid ClipToBounds="True" IsHitTestVisible="False"
+              Width="{Binding ElementName=layerImage,Path=ActualWidth}" Height="{Binding ElementName=layerImage,Path=ActualHeight}"
+              HorizontalAlignment="{Binding ElementName=layerImage,Path=HorizontalAlignment}"
+              VerticalAlignment="{Binding ElementName=layerImage,Path=VerticalAlignment}"
+              Margin="{Binding ElementName=layerImage,Path=Margin}">
+            <local:PartialZoomControl x:Name="partialZoomControl" HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed"/>
+        </Grid>
+        <!--顶部工具栏-->
+        <ContentPresenter Content="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type local:ImageEx}},Path=HeaderContent}" />
+        <!--占位图-->
+        <Border x:Name="defaultImageBorder" Background="#F3F3F3" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Image Source="pack://application:,,,/Aipark.Wpf.Controls;component/Resources/Images/default-picture.jpg" Stretch="None"/>
+                <TextBlock Foreground="#CACACA" Text="暂无图片" FontSize="24" FontFamily="SimHei" VerticalAlignment="Center" Margin="4,0,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <local:ImageLoadingControl x:Name="loadingControl" Status="Waiting" Fault="" HorizontalAlignment="Center" VerticalAlignment="Center" Click="LoadingControl_Click"/>
+    </Grid>
+</UserControl>

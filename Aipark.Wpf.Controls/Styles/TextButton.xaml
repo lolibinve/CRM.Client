@@ -1,0 +1,137 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Aipark.Wpf.Controls">
+
+    <!--纯色背景文本按钮样式-->
+    <Style x:Key="ColorTextButtonStyle" TargetType="{x:Type local:ButtonEx}">
+        <Setter Property="ButtonStyle" Value="Text"/>
+        <Setter Property="Padding" Value="9,8"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="MouseOverForeground" Value="White"/>
+        <Setter Property="MousePressedForeground" Value="White"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="WhiteTextButtonStyle" TargetType="{x:Type local:ButtonEx}" BasedOn="{StaticResource ColorTextButtonStyle}">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="MouseOverBackground" Value="AliceBlue"/>
+        <Setter Property="MouseOverForeground" Value="Black"/>
+        <Setter Property="MousePressedBackground" Value="LightSkyBlue"/>
+        <Setter Property="MousePressedForeground" Value="Black"/>
+    </Style>
+
+    <Style x:Key="DarkBlueTextButtonStyle" TargetType="{x:Type local:ButtonEx}" BasedOn="{StaticResource ColorTextButtonStyle}">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#2C7EC8"/>
+        <Setter Property="MouseOverBackground" Value="#3A8EE6"/>
+        <Setter Property="MousePressedBackground" Value="#0963B0"/>
+    </Style>
+
+    <Style x:Key="BlueTextButtonStyle" TargetType="{x:Type local:ButtonEx}" BasedOn="{StaticResource ColorTextButtonStyle}">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#409EFF"/>
+        <Setter Property="MouseOverBackground" Value="#66B1FF"/>
+        <Setter Property="MousePressedBackground" Value="#3A8EE6"/>
+    </Style>
+
+    <Style x:Key="GreenTextButtonStyle" TargetType="{x:Type local:ButtonEx}" BasedOn="{StaticResource ColorTextButtonStyle}">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#67C23A"/>
+        <Setter Property="MouseOverBackground" Value="#85CE61"/>
+        <Setter Property="MousePressedBackground" Value="#5DAF34"/>
+    </Style>
+
+    <Style x:Key="YellowTextButtonStyle" TargetType="{x:Type local:ButtonEx}" BasedOn="{StaticResource ColorTextButtonStyle}">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#E6A23D"/>
+        <Setter Property="MouseOverBackground" Value="#EBB563"/>
+        <Setter Property="MousePressedBackground" Value="#CF9236"/>
+    </Style>
+
+    <Style x:Key="RedTextButtonStyle" TargetType="{x:Type local:ButtonEx}" BasedOn="{StaticResource ColorTextButtonStyle}">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#F56C6C"/>
+        <Setter Property="MouseOverBackground" Value="#F78989"/>
+        <Setter Property="MousePressedBackground" Value="#DD6161"/>
+    </Style>
+
+    <Style x:Key="PurpleTextButtonStyle" TargetType="{x:Type local:ButtonEx}" BasedOn="{StaticResource ColorTextButtonStyle}">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#ab87ff"/>
+        <Setter Property="MouseOverBackground" Value="#c7aeff"/>
+        <Setter Property="MousePressedBackground" Value="#9466ff"/>
+    </Style>
+
+    <Style x:Key="TransparentTextButtonStyle" TargetType="{x:Type local:ButtonEx}" BasedOn="{StaticResource ColorTextButtonStyle}">
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="MouseOverBackground" Value="#2F000000"/>
+        <Setter Property="MousePressedBackground" Value="#1F000000"/>
+    </Style>
+
+    <Style x:Key="RoundBlackTextButtonStyle" TargetType="{x:Type local:ButtonEx}">
+        <Setter Property="Width" Value="60"/>
+        <Setter Property="Height" Value="60"/>
+        <Setter Property="CornerRadius" Value="30"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#80000000"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="MouseOverBackground" Value="#50000000"/>
+        <Setter Property="MouseOverForeground" Value="White"/>
+        <Setter Property="MousePressedBackground" Value="#80000000"/>
+        <Setter Property="MousePressedForeground" Value="White"/>
+        <Setter Property="FontSize" Value="33"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style x:Key="Radius20BlackTextButtonStyle" TargetType="{x:Type local:ButtonEx}">
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#80000000"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="MouseOverBackground" Value="#50000000"/>
+        <Setter Property="MouseOverForeground" Value="White"/>
+        <Setter Property="MousePressedBackground" Value="#80000000"/>
+        <Setter Property="MousePressedForeground" Value="White"/>
+        <Setter Property="FontSize" Value="23"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style x:Key="ThumbnailGrayButtonStyle" TargetType="{x:Type local:ButtonEx}">
+        <Setter Property="Width" Value="50"/>
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="CornerRadius" Value="2"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#FFDDDDDD"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="MouseOverBackground" Value="#FFBEE6FD"/>
+        <Setter Property="MouseOverForeground" Value="Black"/>
+        <Setter Property="MousePressedBackground" Value="#FFC4E5F6"/>
+        <Setter Property="MousePressedForeground" Value="Black"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Margin" Value="0,0,10,0"/>
+    </Style>
+
+    <Style x:Key="ThumbnailBlueButtonStyle" TargetType="{x:Type local:ButtonEx}">
+        <Setter Property="Width" Value="50"/>
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="CornerRadius" Value="2"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="#2C7EC8"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="MouseOverBackground" Value="#3A8EE6"/>
+        <Setter Property="MouseOverForeground" Value="White"/>
+        <Setter Property="MousePressedBackground" Value="#0963B0"/>
+        <Setter Property="MousePressedForeground" Value="White"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+</ResourceDictionary>

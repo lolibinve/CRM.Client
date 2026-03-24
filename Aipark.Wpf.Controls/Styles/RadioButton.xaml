@@ -1,0 +1,126 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+
+    <Style x:Key="PicRadioButton" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="Transparent"></Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border BorderThickness="1" BorderBrush="Gray">
+                        <Grid  Background="{TemplateBinding Background}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition ></ColumnDefinition>
+                                <ColumnDefinition Width="2*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Grid Grid.Column="0" Background="{TemplateBinding Foreground}"></Grid>
+                            <TextBlock Grid.Column="0"  Grid.ColumnSpan="2" SnapsToDevicePixels="True" Foreground="#657180" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{TemplateBinding Tag}"></TextBlock>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate>
+                            <Border Background="#FFF6F6F6">
+
+                                <Grid  Background="{TemplateBinding Background}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition></ColumnDefinition>
+                                        <ColumnDefinition  Width="2*"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0"  Background="{TemplateBinding Foreground}"></Grid>
+                                    <Path Grid.Column="0" Grid.ColumnSpan="2" Data="M80,180 C90,190 89.5,189.5 89.5,189.5 L109.50042,169.49985 109.50042,169.49985 109.50042,169.49985 109.50042,169.49985 107.68789,168.49983 89.500135,186.8751 79.499993,177.87497 79.499993,178.12497 76.999959,179.49999 z" Fill="#FFF4F4F5" HorizontalAlignment="Center" Margin="5" Stretch="Uniform" Stroke="Gray" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="0"  Grid.ColumnSpan="2" SnapsToDevicePixels="True" Foreground="#657180" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{TemplateBinding Tag}"></TextBlock>
+                                </Grid>
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#FF000000" ShadowDepth="4" BlurRadius="5"  Opacity="0.15" Direction="270"></DropShadowEffect>
+                                </Border.Effect>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate>
+                            <Border Background="#FFF6F6F6">
+                                <Grid  Background="{TemplateBinding Background}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition></ColumnDefinition>
+                                        <ColumnDefinition  Width="2*"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0" Background="{TemplateBinding Foreground}"></Grid>
+                                    <Path Grid.Column="0" Grid.ColumnSpan="2" Data="M80,180 C90,190 89.5,189.5 89.5,189.5 L109.50042,169.49985 109.50042,169.49985 109.50042,169.49985 109.50042,169.49985 107.68789,168.49983 89.500135,186.8751 79.499993,177.87497 79.499993,178.12497 76.999959,179.49999 z" Fill="#FFF4F4F5" HorizontalAlignment="Center" Margin="5" Stretch="Uniform" Stroke="White" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="0"  Grid.ColumnSpan="2" SnapsToDevicePixels="True" Foreground="#657180" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{TemplateBinding Tag}"></TextBlock>
+                                </Grid>
+
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#FF000000" ShadowDepth="4" BlurRadius="5"  Opacity="0.15" Direction="270"></DropShadowEffect>
+                                </Border.Effect>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="Background" Value="White"></Condition>
+                    <Condition Property="IsChecked" Value="True"></Condition>
+                </MultiTrigger.Conditions>
+                <MultiTrigger.Setters>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <Border Background="#FFF6F6F6">
+                                    <Grid  Background="{TemplateBinding Background}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition></ColumnDefinition>
+                                            <ColumnDefinition></ColumnDefinition>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Grid.Column="0" Background="{TemplateBinding Foreground}"></Grid>
+                                        <Path Grid.Column="0" Grid.ColumnSpan="2" Data="M80,180 C90,190 89.5,189.5 89.5,189.5 L109.50042,169.49985 109.50042,169.49985 109.50042,169.49985 109.50042,169.49985 107.68789,168.49983 89.500135,186.8751 79.499993,177.87497 79.499993,178.12497 76.999959,179.49999 z" Fill="#FFF4F4F5" HorizontalAlignment="Center" Margin="5" Stretch="Uniform" Stroke="Black" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="0"  Grid.ColumnSpan="2" SnapsToDevicePixels="True" Foreground="#657180" VerticalAlignment="Center" HorizontalAlignment="Center" Text="{TemplateBinding Tag}"></TextBlock>
+                                    </Grid>
+
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#FF000000" ShadowDepth="4" BlurRadius="5"  Opacity="0.15" Direction="270"></DropShadowEffect>
+                                    </Border.Effect>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </MultiTrigger.Setters>
+            </MultiTrigger>
+        </Style.Triggers>
+    </Style>
+
+
+    <Style x:Key="CommonRbtn" TargetType="RadioButton">
+        <Setter Property="IsChecked" Value="False"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#FFBFBFBF"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="bd" Width="{TemplateBinding Width}" Background="#FFEEEEEE" Height="{TemplateBinding Height}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
+                        <TextBlock x:Name="text1" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FF666666" Text="{TemplateBinding Content}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="true">
+                            <Setter Property="Foreground" TargetName="text1" Value="#FFFFFFFF"/>
+                            <Setter Property="BorderBrush" Value="#FF2375A3"/>
+                            <Setter Property="Background" TargetName="bd" Value="#FF459FE2"></Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

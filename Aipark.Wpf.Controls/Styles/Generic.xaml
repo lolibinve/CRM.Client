@@ -1,0 +1,19 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/Converter.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/WindowButton.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/IconButton.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/TextButton.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/IconTextButton.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/GeometryButton.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/PasswordBox.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/TextBox.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/Button.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/TextBlock.xaml" /> 
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/RadioButton.xaml" />
+        <ResourceDictionary Source="/Aipark.Wpf.Controls;component/Styles/TextHyperlink.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+</ResourceDictionary>

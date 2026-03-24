@@ -1,0 +1,14 @@
+﻿<UserControl x:Class="Aipark.Wpf.Controls.ImageEx"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Aipark.Wpf.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid Background="#0FEFEFEF">
+        <Image x:Name="Image" Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <local:ImageStateControl x:Name="progressControl" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12" Visibility="Collapsed" RefreshButtonClick="ProgressControl_RefreshButtonClick"/>
+    </Grid>
+</UserControl>

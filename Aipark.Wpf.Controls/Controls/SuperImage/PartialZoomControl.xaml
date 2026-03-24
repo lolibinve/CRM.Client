@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="Aipark.Wpf.Controls.SuperImage.PartialZoomControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Aipark.Wpf.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="200" d:DesignWidth="200">
+
+    <Grid ClipToBounds="True">
+        <Image x:Name="zoomImage" Stretch="Fill" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <Ellipse x:Name="borderEllipse" StrokeThickness="2" Stroke="Silver"/>
+        <Grid.Clip>
+            <EllipseGeometry x:Name="clipEllipse" Center="100,100" RadiusX="100" RadiusY="100"/>
+        </Grid.Clip>
+    </Grid>
+</UserControl>

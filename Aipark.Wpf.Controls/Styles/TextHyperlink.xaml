@@ -1,0 +1,19 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Aipark.Wpf.Controls">
+
+    <Style x:Key="DarkBlueTextHyperlinkStyle" TargetType="{x:Type local:TextHyperlink}">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontFamily" Value="SimHei"/>
+        <Setter Property="Foreground" Value="#2C7EC8"/>
+        <Setter Property="HoverForeground" Value="#3A8EE6"/>
+    </Style>
+
+    <Style x:Key="BlueTextHyperlinkStyle" TargetType="{x:Type local:TextHyperlink}">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontFamily" Value="SimHei"/>
+        <Setter Property="Foreground" Value="#409EFF"/>
+        <Setter Property="HoverForeground" Value="#66B1FF"/>
+    </Style>
+
+</ResourceDictionary>

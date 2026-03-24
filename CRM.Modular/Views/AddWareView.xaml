@@ -1,0 +1,265 @@
+﻿<Window x:Class="CRM.Modular.Views.AddWareView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:wpf="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:cm="http://caliburnmicro.com"
+        xmlns:local="clr-namespace:CRM.Modular.Views"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        FontWeight="Light" WindowState="Maximized" Background="#EDEDED"
+        Title="{Binding Title}" Height="900" Width="1500">
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                <Setter Property="Height" Value="50"></Setter>
+            </Style>
+            <Style TargetType="TextBlock" >
+                <Setter Property="VerticalAlignment" Value="Center"></Setter>
+            </Style>
+
+            <Style x:Key="CommonTabStyle" TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
+                <Setter Property="MinWidth" Value="50"></Setter>
+                <Setter Property="Width" Value="auto"></Setter>
+            </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/CRM.Modular;component/BaseThemes.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid  Margin="20" >
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="350"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="3*"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="基本信息"  Grid.Row="0"  FontWeight="Black" FontSize="18" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+                    <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="10,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="SKU:" Grid.Column="0" Grid.Row="0" />
+                        <TextBox Grid.Column="1" Grid.Row="0" Text="{Binding Ware.Sku}" VerticalAlignment="Center" 
+                         Padding="0,0,0,3" Style="{StaticResource MaterialDesignTextBox}" />
+
+                        <TextBlock Text="产品类型:" Grid.Column="0" Grid.Row="1"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Ware.FeedProductType}" 
+                         VerticalAlignment="Center" Padding="0,0,0,3" Style="{StaticResource MaterialDesignTextBox}" />
+
+                        <DataGrid ItemsSource="{Binding Ware.BasePrice}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" AutoGenerateColumns="False" Height="auto" RowHeight="30"
+                  SelectedItem="{Binding SelectPrice}" SelectionMode="Single" CanUserAddRows="False"   LoadingRow="Lst_LoadingRow">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="国家"  Binding="{Binding Country}" IsReadOnly="True" ElementStyle="{x:Null}"></DataGridTextColumn>
+                                <DataGridTextColumn Header="货币"  Binding="{Binding Currency}" IsReadOnly="True" ElementStyle="{x:Null}"></DataGridTextColumn>
+                                <DataGridTextColumn Header="价格"  Binding="{Binding Price}" IsReadOnly="False"  ElementStyle="{x:Null}"></DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Grid>
+
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Text="变体"  Grid.Row="0"  FontWeight="Black" FontSize="18"  VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+                    <Grid Grid.Row="1" Grid.ColumnSpan="2" Margin="10,0,0,0" Height="40">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="auto"/>
+
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="颜色:" Height="16"/>
+                        <TextBox  Text="{Binding Ware.Colors}" Grid.Column="1"  VerticalAlignment="Center"  Style="{StaticResource MaterialDesignTextBox}" Margin="30,0,0,0" Height="24" wpf:HintAssist.Hint="多个颜色请用空格分隔，如：red green"/>
+                        <Button  Grid.Column="2"  Content="颜色生成" x:Name="CreateColors" Margin="20,0,0,0"/>
+
+                        <TextBlock Grid.Column="3" Text="尺寸:"  Height="16" Margin="50,0,0,0"/>
+                        <TextBox  Text="{Binding Ware.Sizes}" Grid.Column="4"  VerticalAlignment="Center"  Style="{StaticResource MaterialDesignTextBox}"  Height="24"  wpf:HintAssist.Hint="多个尺寸请用空格分隔，如：L XL"/>
+                        <Button Content="尺寸生成" Margin="10,0,0,0"  Grid.Column="5"  x:Name="CreateSizes"/>
+                        <Button Content="颜色*尺寸生成" x:Name="CreateColorsSizes"  Grid.Column="6" Margin="10,0,0,0"/>
+
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Height="40">
+                        <Button Content="同步图片" x:Name="SyncPictures"  Grid.Column="7" Margin="10,0,0,0"/>
+                        <Button Content="同步零件编号" ToolTip="根据第一个变体同步后续零件编号" x:Name="SyncPartCode"  Grid.Column="8" Margin="10,0,0,0"/>
+                    </StackPanel>
+                    
+                    
+                    
+                    <DataGrid x:Name="Child" Grid.Row="3" AutoGenerateColumns="False" RowHeaderWidth="0" CanUserAddRows="False" VerticalAlignment="Top"
+                   SelectedItem="{Binding SelectChild}" SelectionMode="Single" LoadingRow="Lst_LoadingRow" IsReadOnly="True" Margin="10,0,0,0"
+                  cm:Message.Attach="[Event MouseDoubleClick] = [Action EditPrice($source,$eventArgs)]"
+                   Visibility="{Binding ChildVisibility,Mode=TwoWay,Converter={StaticResource BooleanToVisibilityConverter}}" Grid.ColumnSpan="2">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="序号" Width="60" IsReadOnly="True" Visibility="Collapsed">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type DataGridRow}}, Path=Header}"  HorizontalAlignment="Stretch" VerticalAlignment="Center" ></TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="颜色"  Binding="{Binding Color}" Width="auto"  ElementStyle="{x:Null}" ></DataGridTextColumn>
+                            <DataGridTextColumn Header="尺寸"  Binding="{Binding Size}" Width="auto"  ElementStyle="{x:Null}"></DataGridTextColumn>
+                            <DataGridTextColumn Header="库存"  Binding="{Binding Quantity}" Width="60"  ElementStyle="{x:Null}"></DataGridTextColumn>
+                            <DataGridTextColumn Header="零件编号"  Binding="{Binding PartNumber}"  ElementStyle="{x:Null}"></DataGridTextColumn>
+                            <DataGridTextColumn Header="加价"  Binding="{Binding PriceDiff}"  ElementStyle="{x:Null}"></DataGridTextColumn>
+                            <DataGridTemplateColumn Header="主图">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding MainImageUrl}" Width="60" Height="60"></Image>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn  Header="副图1">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding OtherImageUrl1}" Width="60" Height="60"></Image>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="副图2" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding OtherImageUrl2}" Width="60" Height="60"></Image>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="副图3">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding OtherImageUrl3}" Width="60" Height="60"></Image>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="副图4">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding OtherImageUrl4}" Width="60" Height="60"></Image>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="副图5">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding OtherImageUrl5}" Width="60" Height="60"></Image>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="副图6">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding OtherImageUrl6}" Width="60" Height="60"></Image>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="副图7">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Image Source="{Binding OtherImageUrl7}" Width="60" Height="60"></Image>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="操作" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button  cm:Message.Attach="[Event Click]= [Action EditPrice($source,$eventArgs)]" Style="{StaticResource MaterialDesignOutlinedButton}" Content="编辑"></Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="删除"  >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button  cm:Message.Attach="[Event Click]= [Action DeletePrice($source,$eventArgs)]" Style="{StaticResource MaterialDesignOutlinedButton}" Content="删除"></Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Grid>
+
+            <TabControl x:Name="TabControl" Grid.Row="1" Margin="0,10,0,0">
+                <TabItem Header="英文" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="English" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="法文" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="France" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="德文" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="German" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="意大利文" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Italy" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="西班牙文" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Spain" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="中文"  Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Chinese" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="日文" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Japan" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="阿拉伯语" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Arabic" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="荷兰语" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Dutch" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="瑞典语" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Svenska" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="波兰语" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Polski" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="葡萄牙语" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Portuguese" Margin="10,0,10,0"/>
+                </TabItem>
+                <TabItem Header="韩语" Style="{StaticResource CommonTabStyle}">
+                    <ContentControl x:Name="Korean" Margin="10,0,10,0"/>
+                </TabItem>
+            </TabControl>
+            
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2" Grid.Column="1">
+                <Button Name="CloseForm" Content="取消" Height="35" Width="100" Style="{StaticResource MaterialDesignFlatLightBgButton}"/>
+                <Button Name="Sure" Content="确认" Height="35" Width="100" Margin="50,0,0,0" Style="{StaticResource MaterialDesignFlatMidBgButton}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+
+</Window>

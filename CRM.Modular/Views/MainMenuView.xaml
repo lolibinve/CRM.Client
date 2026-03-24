@@ -1,0 +1,39 @@
+﻿<UserControl x:Class="CRM.Modular.Views.MainMenuView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CRM.Modular.Views"
+             xmlns:wpf="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" >
+
+    <UserControl.Resources>
+        <ResourceDictionary >
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/CRM.Modular;component/BaseThemes.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <TabControl TabStripPlacement="Left"  Style="{StaticResource MaterialDesignTabControl}" wpf:ColorZoneAssist.Background="White"  wpf:ElevationAssist.Elevation="Dp8"  wpf:ColorZoneAssist.Mode="PrimaryDark"  Margin="1,1,10,5">
+            
+            <TabItem Header="订单管理" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}">
+                <ContentControl x:Name="Order" Margin="20,0,10,0" />
+            </TabItem>
+            <TabItem Header="角色管理" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" Visibility="{Binding IsAdmin,Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ContentControl x:Name="Role" Margin="20,0,10,0"/>
+            </TabItem>
+            <TabItem Header="产品管理" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}">
+                <ContentControl x:Name="Product" Margin="20,0,10,0"/>
+            </TabItem>
+            <TabItem Header="汇率管理" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" Visibility="{Binding IsAdmin,Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ContentControl x:Name="Exchange" Margin="20,0,10,0"/>
+            </TabItem>
+            <TabItem Header="上架管理" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" >
+                <ContentControl x:Name="ListManage" Margin="20,0,10,0"/>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

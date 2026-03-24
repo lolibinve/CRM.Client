@@ -1,0 +1,62 @@
+﻿<base:BaseShape x:Class="Aipark.Wpf.Controls.PolygonExtShape"
+                xmlns:base="clr-namespace:Aipark.Wpf.Controls"
+                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                MinWidth="10" MinHeight="10"
+                Width="200" Height="100"
+                Visibility="{Binding Visibility}"
+                Background="{x:Null}"
+                Loaded="BaseShape_Loaded">
+
+    <UserControl.Resources>
+        <Style x:Key="CornerThumbStyle" TargetType="{x:Type Thumb}">
+            <Setter Property="Cursor" Value="Arrow"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Grid Width="13" Height="13">
+                            <Ellipse Fill="Blue" Opacity="0.75"/>
+                            <TextBlock FontSize="10" Text="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type Thumb},AncestorLevel=1},Path=Tag}" 
+                                       Foreground="White" FontFamily="Times New Roman" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="VirtualCornerThumbStyle" TargetType="{x:Type Thumb}">
+            <Setter Property="Cursor" Value="Arrow"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Grid Width="13" Height="13">
+                            <Ellipse Fill="Red" Opacity="0.75"/>
+                            <TextBlock FontSize="10" Text="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type Thumb},AncestorLevel=1},Path=Tag}" 
+                                       Foreground="White" FontFamily="Times New Roman" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid x:Name="rootGrid">
+        <Canvas x:Name="rootCanvas" Width="{Binding ElementName=rootGrid,Path=ActualWidth}" Height="{Binding ElementName=rootGrid,Path=ActualHeight}">
+            <Rectangle x:Name="bgRectangle" Width="{Binding ElementName=rootGrid,Path=ActualWidth}" Height="{Binding ElementName=rootGrid,Path=ActualHeight}" 
+                       IsHitTestVisible="False" Fill="Transparent" Opacity="0.25" ToolTip="{Binding Tag}"
+                       PreviewMouseRightButtonUp="BgRectangle_PreviewMouseRightButtonUp"
+                       MouseLeftButtonDown="BgRectangle_MouseLeftButtonDown"
+                       MouseEnter="BgRectangle_MouseEnter"
+                       MouseLeave="BgRectangle_MouseLeave">
+                <Rectangle.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="删除" Click="MenuItem_Click"/>
+                        <MenuItem Header="背景对象" Click="MenuItem_Click" />
+                        <MenuItem Header="编辑标签" Click="MenuItem_Click" />
+                    </ContextMenu>
+                </Rectangle.ContextMenu>
+            </Rectangle>
+            <!--虚指示线-->
+            <Line x:Name="suggestLine" X1="0" Y1="0" X2="0" Y2="0" Stroke="Chartreuse" StrokeThickness="1" StrokeDashArray="5,3" IsHitTestVisible="False" Visibility="Collapsed"/>
+        </Canvas>
+    </Grid>
+</base:BaseShape>

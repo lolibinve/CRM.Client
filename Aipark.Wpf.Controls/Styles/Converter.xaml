@@ -1,0 +1,9 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Aipark.Wpf.Converters">
+
+    <local:VisibilityReverseConverter x:Key="VisibilityReverseConverter" />
+    <local:BooleanToCollapsedConverter x:Key="BooleanToCollapsedConverter"/>
+    <local:BooleanReverseConverter x:Key="BooleanReverseConverter" />
+
+</ResourceDictionary>
