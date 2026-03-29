@@ -55,6 +55,7 @@
             <TextBox x:Name="OrderIdSearch" wpf:HintAssist.Hint="订单号" MinWidth="160" Margin="12,0,0,0"/>
             <Button x:Name="Query" Width="80" Height="35" Content="查询" Margin="12,0,0,0"/>
             <Button x:Name="Add" Width="80" Height="35" Content="新增" Margin="10,0,0,0"/>
+            <Button x:Name="Delete" Width="80" Height="35" Content="删除" Margin="10,0,0,0"/>
         </StackPanel>
 
         <DataGrid x:Name="RecordLst"
@@ -68,6 +69,16 @@
                   VerticalAlignment="Stretch"
                   cm:Message.Attach="[Event MouseDoubleClick] = [Action Record_MouseDoubleClick($source,$eventArgs)]">
             <DataGrid.Columns>
+                <DataGridTemplateColumn Header="选中" Width="56" IsReadOnly="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox Style="{StaticResource MaterialDesignAccentCheckBox}"
+                                      IsThreeState="False"
+                                      cm:Message.Attach="[Event Click] = [Action FbmItem_CheckedClick($source,$eventArgs)]"
+                                      IsChecked="{Binding IsCheck, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="序号" Width="56" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -77,14 +88,14 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="采购时间" Width="120"
-                                    Binding="{Binding PurchaseDate, StringFormat='{}{0:yyyy-MM-dd}'}"
+                                    Binding="{Binding PurchaseDateEdit, StringFormat='{}{0:yyyy-MM-dd}'}"
                                     ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="订单号" Width="160" Binding="{Binding OrderId}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="采购金额" Width="120"
                                     Binding="{Binding Expense, StringFormat={}{0:F2}}"
                                     ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="业务员" Width="100" Binding="{Binding BuyerName}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="采购账号" Width="180" Binding="{Binding AccountName}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="采购账号" Width="180" Binding="{Binding PurchaseAccount}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="支付方式" Width="100" Binding="{Binding PaymentDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="备注" Width="*" Binding="{Binding Remark}" ElementStyle="{x:Null}"/>
             </DataGrid.Columns>

@@ -1,4 +1,4 @@
-﻿using PropertyChanged;
+using PropertyChanged;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,7 +18,7 @@ namespace CRM.Model
     }
 
     /// <summary>
-    /// 采购账号列表行，对应后端 accountList 返回字段（JSON 映射在 CRM.HttpClient 中完成）。
+    /// 采购账号列表行；后端字段 <c>addTime</c>、<c>moneyIn</c>、<c>name</c>、<c>type</c> 等与前端属性通过 <see cref="DataMemberAttribute"/> 对应。
     /// </summary>
     [DataContract]
     [AddINotifyPropertyChangedInterface]
@@ -27,10 +27,12 @@ namespace CRM.Model
         [DataMember(Name = "id")]
         public int Id { get; set; }
 
-        /// <summary>原始 addTime（由接口层赋值：Unix、字符串等）</summary>
+        /// <summary>后端 <c>addTime</c>（Unix、字符串等）。</summary>
+        [DataMember(Name = "addTime")]
         public object AddTimeToken { get; set; }
 
-        [DataMember(Name = "date")]
+        /// <summary>界面日期；不参与 JSON 序列化，由 <see cref="AddTimeToken"/> 推导。</summary>
+        [IgnoreDataMember]
         public DateTime? Date
         {
             get => ParseAddTime(AddTimeToken);
@@ -43,31 +45,43 @@ namespace CRM.Model
             }
         }
 
-        [DataMember(Name = "amount")]
+        [DataMember(Name = "moneyIn")]
         public decimal Amount { get; set; }
 
+        /// <summary>后端可能使用 <c>name</c> 或 <c>procurementAccount</c> 表示采购账号名称。</summary>
+        [DataMember(Name = "name")]
+        public string NameRaw { get; set; }
+
         [DataMember(Name = "procurementAccount")]
-        public string ProcurementAccount { get; set; }
+        public string ProcurementAccountRaw { get; set; }
 
-        public object TypeRaw { get; set; }
-
-        [DataMember(Name = "fundType")]
-        public string FundType
+        /// <summary>采购账号（界面绑定）；合并 <see cref="NameRaw"/> 与 <see cref="ProcurementAccountRaw"/>。</summary>
+        [IgnoreDataMember]
+        public string ProcurementAccount
         {
-            get
-            {
-                if (TypeRaw == null) return "";
-                if (TypeRaw is string s) return s;
-                return TypeRaw.ToString();
-            }
-            set => TypeRaw = value;
+            get => NameRaw ?? ProcurementAccountRaw ?? "";
+            set => NameRaw = value;
         }
+
+        /// <summary>资金类型，对应接口 <c>type</c>：<c>0</c> 现金存入，<c>1</c> 账期/诚意赊。</summary>
+        [DataMember(Name = "type")]
+        public int AccountType { get; set; }
+
+        /// <summary>列表展示用资金类型文案（与 <see cref="AccountType"/> 同步）。</summary>
+        [IgnoreDataMember]
+        [DependsOn(nameof(AccountType))]
+        public string FundTypeDisplay =>
+            AccountType == 0 ? "现金存入" :
+            AccountType == 1 ? "账期/诚意赊" :
+            AccountType.ToString(CultureInfo.InvariantCulture);
 
         [DataMember(Name = "remark")]
         public string Remark { get; set; }
 
+        [DataMember(Name = "balanceCash")]
         public decimal? BalanceCash { get; set; }
 
+        [DataMember(Name = "balanceDebt")]
         public decimal? BalanceDebt { get; set; }
 
         [DataMember(IsRequired = false)]

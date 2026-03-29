@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace CRM.Modular.ViewModels
@@ -182,6 +184,59 @@ namespace CRM.Modular.ViewModels
             if (ok == true)
             {
                 await QueryBase(PageInfo?.PageNum ?? 1);
+            }
+        }
+
+        public async void Delete()
+        {
+            var checkedItem = RecordLst?.FirstOrDefault(x => x.IsCheck);
+            if (checkedItem == null || checkedItem.Id <= 0)
+            {
+                MessageBox.Show("请先勾选要删除的 FBM 采购记录。");
+                return;
+            }
+
+            var label = string.IsNullOrWhiteSpace(checkedItem.OrderId)
+                ? $"ID {checkedItem.Id}"
+                : $"订单「{checkedItem.OrderId}」";
+            if (MessageBox.Show($"确定删除 {label} 的这条记录吗？", "确认删除",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            IsProgressIndeterminate = true;
+            try
+            {
+                var ok = await CRMRequest.FbmPurchaseDelete(checkedItem.Id);
+                if (ok)
+                {
+                    await QueryBase(PageInfo?.PageNum ?? 1);
+                }
+            }
+            finally
+            {
+                IsProgressIndeterminate = false;
+            }
+        }
+
+        /// <summary>与角色列表一致：同一时刻仅允许勾选一个。</summary>
+        public void FbmItem_CheckedClick(object sender, RoutedEventArgs e)
+        {
+            if (RecordLst == null || RecordLst.Count == 0 || sender == null)
+            {
+                return;
+            }
+
+            if (((FrameworkElement)sender).DataContext is FbmPurchaseRecordModel data)
+            {
+                foreach (var item in RecordLst)
+                {
+                    if (item.Id != data.Id && item.IsCheck)
+                    {
+                        item.IsCheck = false;
+                    }
+                }
             }
         }
 

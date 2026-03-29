@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using CRM.Model;
+using HttpLib;
 using PropertyChanged;
 using System;
 using System.Threading.Tasks;
@@ -8,12 +9,40 @@ using System.Windows;
 namespace CRM.Modular.ViewModels
 {
     [AddINotifyPropertyChangedInterface]
-    public class AddProcurementAccountViewModel : Screen
+    public class AddPurchaseAccountViewModel : Screen
     {
         public ProcurementAccountLstModel Account { get; set; } = new ProcurementAccountLstModel();
         public string Title { get; set; }
 
-        public AddProcurementAccountViewModel(ProcurementAccountLstModel data, bool isModify = false)
+        /// <summary>资金类型：现金存入 = 0。</summary>
+        public bool IsCashType
+        {
+            get => Account.AccountType == 0;
+            set
+            {
+                if (value)
+                {
+                    Account.AccountType = 0;
+                    RefreshFundTypeUi();
+                }
+            }
+        }
+
+        /// <summary>资金类型：账期/诚意赊 = 1。</summary>
+        public bool IsCreditType
+        {
+            get => Account.AccountType == 1;
+            set
+            {
+                if (value)
+                {
+                    Account.AccountType = 1;
+                    RefreshFundTypeUi();
+                }
+            }
+        }
+
+        public AddPurchaseAccountViewModel(ProcurementAccountLstModel data, bool isModify = false)
         {
             Title = isModify ? "修改采购账号记录" : "新增采购账号记录";
             if (isModify && data != null)
@@ -23,7 +52,25 @@ namespace CRM.Modular.ViewModels
             else
             {
                 Account.Date = System.DateTime.Now.Date;
+                Account.AccountType = 0;
             }
+
+            NormalizeFundType();
+            RefreshFundTypeUi();
+        }
+
+        private void NormalizeFundType()
+        {
+            if (Account.AccountType != 0 && Account.AccountType != 1)
+            {
+                Account.AccountType = 0;
+            }
+        }
+
+        private void RefreshFundTypeUi()
+        {
+            NotifyOfPropertyChange(nameof(IsCashType));
+            NotifyOfPropertyChange(nameof(IsCreditType));
         }
 
         public async void Sure()
@@ -40,11 +87,18 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
+            var ok = await CRMRequest.PurchaseAccountEdit(Account);
+            if (!ok)
+            {
+                return;
+            }
+
             var temp = GetView();
             if (temp is Window win)
             {
                 win.DialogResult = true;
             }
+
             await TryCloseAsync();
         }
 
@@ -63,8 +117,9 @@ namespace CRM.Modular.ViewModels
             target.Id = source.Id;
             target.AddTimeToken = source.AddTimeToken;
             target.Amount = source.Amount;
-            target.ProcurementAccount = source.ProcurementAccount;
-            target.TypeRaw = source.TypeRaw;
+            target.NameRaw = source.NameRaw;
+            target.ProcurementAccountRaw = source.ProcurementAccountRaw;
+            target.AccountType = source.AccountType;
             target.Remark = source.Remark;
             target.BalanceCash = source.BalanceCash;
             target.BalanceDebt = source.BalanceDebt;

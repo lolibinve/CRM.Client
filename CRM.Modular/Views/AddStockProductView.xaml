@@ -1,12 +1,59 @@
-﻿<UserControl x:Class="CRM.Modular.Views.AddStockProductView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CRM.Modular.Views"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
+<Window x:Class="CRM.Modular.Views.AddStockProductView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CRM.Modular.Views"
+        Language="zh-CN"
+        mc:Ignorable="d"
+        Title="{Binding Title}" Height="320" Width="520"
+        WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow">
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
+                <Setter Property="Height" Value="45"/>
+                <Setter Property="Margin" Value="10,0,0,0"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+                <Setter Property="Foreground" Value="#A7A7A7"/>
+            </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/CRM.Modular;component/BaseThemes.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="22,20,22,18">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="52"/>
+            <RowDefinition Height="52"/>
+            <RowDefinition Height="52"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="产品编码:"/>
+        <TextBox Grid.Row="0" Grid.Column="1"
+                 Text="{Binding Record.ProductCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="产品名称:"/>
+        <TextBox Grid.Row="1" Grid.Column="1"
+                 Text="{Binding Record.ProductName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="说明:" VerticalAlignment="Top" Margin="0,8,0,0"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Foreground="#888" Margin="10,6,0,0"
+                   Text="累计采购数量与各库存由系统自动计算，仅在列表中展示；此处仅维护产品编码与名称。"/>
+
+        <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,16,0,0">
+            <Button Name="CloseForm" Content="取消" Height="32" Width="90"/>
+            <Button Name="Sure" Content="确认" Height="32" Width="90" Margin="36,0,0,0"/>
+        </StackPanel>
     </Grid>
-</UserControl>
+</Window>

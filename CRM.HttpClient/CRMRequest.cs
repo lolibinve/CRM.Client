@@ -673,9 +673,9 @@ namespace HttpLib
         #region 采购账户
 
         /// <summary>
-        /// 采购账号分页列表，对应 GET <c>crm/purchase/accountList</c>（pageNum、pageSize）。
+        /// 采购账号分页列表，对应 GET <c>crm/purchase/accountList</c>（<c>PurchaseAccountListRequest</c>：<c>pageNum</c>、<c>pageSize</c>）。
         /// </summary>
-        public static async Task<PurchaseAccountModel> PurchaseAccountList(int pageNum = 1, int pageSize = 500)
+        public static async Task<PurchaseAccountModel> PurchaseAccountList(int pageNum = 1, int pageSize = 20)
         {
             var parameters = new Dictionary<string, string>()
             {
@@ -686,10 +686,10 @@ namespace HttpLib
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/accountList", parameters);
             if (result.IsSuccess)
             {
-                var response = JsonHelper.DeserializeObject<CRMHttpResponse<PurchaseAccountListApiData>>(result.Content);
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<PurchaseAccountModel>>(result.Content);
                 if (response.State == 0)
                 {
-                    return MapPurchaseAccountModel(response.Value);
+                    return response.Value ?? new PurchaseAccountModel { AccountLst = new List<ProcurementAccountLstModel>(), Count = 0 };
                 }
 
                 MessageBox.Show(response.Desc ?? "获取采购账号列表失败");
@@ -702,55 +702,88 @@ namespace HttpLib
             return null;
         }
 
-        private static PurchaseAccountModel MapPurchaseAccountModel(PurchaseAccountListApiData src)
+        /// <summary>
+        /// 采购账号新增/编辑，GET <c>crm/purchase/accountEdit</c>（<c>PurchaseAccountEditRequest</c>：<c>id</c>、<c>addTime</c>、<c>moneyIn</c>、<c>name</c>、<c>type</c>、<c>remark</c>）。
+        /// 始终传 <c>id</c>：新增为 <c>0</c>，修改为实际主键；<c>addTime</c> 与 <c>ModifyProduct</c> 中 <c>date</c> 相同，为 <c>yyyy-MM-dd</c> 字符串。
+        /// </summary>
+        public static async Task<bool> PurchaseAccountEdit(ProcurementAccountLstModel model)
         {
-            if (src == null)
+            if (model == null)
             {
-                return new PurchaseAccountModel { AccountLst = new List<ProcurementAccountLstModel>(), Count = 0 };
+                return false;
             }
 
-            return new PurchaseAccountModel
+            if (string.IsNullOrWhiteSpace(model.ProcurementAccount))
             {
-                Count = src.count,
-                AccountLst = src.list == null
-                    ? new List<ProcurementAccountLstModel>()
-                    : src.list.Select(MapPurchaseAccountRow).ToList()
-            };
-        }
+                MessageBox.Show("请输入采购账号");
+                return false;
+            }
 
-        private static ProcurementAccountLstModel MapPurchaseAccountRow(PurchaseAccountRowApi r)
-        {
-            if (r == null) return new ProcurementAccountLstModel();
-            return new ProcurementAccountLstModel
+            var name = model.ProcurementAccount.Trim();
+            var addTimeStr = (model.Date ?? DateTime.Now.Date).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            var parameters = new Dictionary<string, string>()
             {
-                Id = r.id,
-                AddTimeToken = r.addTime,
-                Amount = r.moneyIn ?? 0,
-                ProcurementAccount = r.name ?? "",
-                TypeRaw = r.type,
-                Remark = r.remark ?? "",
-                BalanceCash = r.balanceCash,
-                BalanceDebt = r.balanceDebt
+                {"id", model.Id.ToString()},
+                {"addTime", addTimeStr},
+                {"moneyIn", model.Amount.ToString(CultureInfo.InvariantCulture)},
+                {"name", name},
+                {"type", model.AccountType.ToString(CultureInfo.InvariantCulture)},
+                {"remark", model.Remark ?? ""},
             };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/accountEdit", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "保存采购账号失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
         }
 
-        /// <summary>与接口 JSON（camelCase）一致，仅用于反序列化 data 节点。</summary>
-        private sealed class PurchaseAccountListApiData
+        /// <summary>
+        /// 采购账号删除：GET <c>crm/purchase/accountDel</c>，Query 参数 <c>id</c>（与 <c>/crm/purchase/accountDel?id=1</c> 一致）。
+        /// </summary>
+        public static async Task<bool> PurchaseAccountDelete(int id)
         {
-            public int count { get; set; }
-            public List<PurchaseAccountRowApi> list { get; set; }
-        }
+            if (id <= 0)
+            {
+                MessageBox.Show("无效的记录 id，无法删除。");
+                return false;
+            }
 
-        private sealed class PurchaseAccountRowApi
-        {
-            public int id { get; set; }
-            public object addTime { get; set; }
-            public decimal? moneyIn { get; set; }
-            public string name { get; set; }
-            public object type { get; set; }
-            public string remark { get; set; }
-            public decimal? balanceCash { get; set; }
-            public decimal? balanceDebt { get; set; }
+            var parameters = new Dictionary<string, string>()
+            {
+                {"id", id.ToString(CultureInfo.InvariantCulture)},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/accountDel", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "删除失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
         }
 
         #endregion
@@ -778,10 +811,10 @@ namespace HttpLib
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/fbmList", parameters);
             if (result.IsSuccess)
             {
-                var response = JsonHelper.DeserializeObject<CRMHttpResponse<FbmListApiData>>(result.Content);
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<FbmPurchaseListModel>>(result.Content);
                 if (response.State == 0)
                 {
-                    return MapFbmListModel(response.Value);
+                    return response.Value ?? new FbmPurchaseListModel { Count = 0, List = new List<FbmPurchaseRecordModel>() };
                 }
 
                 MessageBox.Show(response.Desc ?? "获取 FBM 采购列表失败");
@@ -795,7 +828,8 @@ namespace HttpLib
         }
 
         /// <summary>
-        /// FBM 采购新增/编辑，GET <c>crm/purchase/fbmEdit</c>（与 <c>accountEdit</c> 参数一致）。
+        /// FBM 采购新增/编辑，GET <c>crm/purchase/fbmEdit</c>（<c>PurchaseEditRequest</c>：<c>orderId</c>、<c>addTime</c>、<c>expense</c> 等）。
+        /// 始终传 <c>id</c>：新增为 <c>0</c>，修改为实际主键。
         /// </summary>
         public static async Task<bool> FbmPurchaseEdit(FbmPurchaseRecordModel model)
         {
@@ -808,10 +842,10 @@ namespace HttpLib
             {
                 {"id", model.Id.ToString()},
                 {"orderId", model.OrderId ?? ""},
-                {"addTime", model.PurchaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""},
+                {"addTime", model.PurchaseDateEdit?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""},
                 {"expense", model.Expense.ToString(CultureInfo.InvariantCulture)},
                 {"Uname", model.BuyerName ?? ""},
-                {"accountName", model.AccountName ?? ""},
+                {"accountName", model.PurchaseAccount ?? ""},
                 {"payment", model.Payment.ToString(CultureInfo.InvariantCulture)},
                 {"remark", model.Remark ?? ""},
             };
@@ -835,113 +869,250 @@ namespace HttpLib
             return false;
         }
 
-        private static FbmPurchaseListModel MapFbmListModel(FbmListApiData src)
+        /// <summary>
+        /// FBM 采购删除：GET <c>crm/purchase/fbmDel</c>，Query 参数 <c>id</c>（与 <c>/crm/purchase/fbmDel?id=100</c> 一致）。
+        /// </summary>
+        public static async Task<bool> FbmPurchaseDelete(int id)
         {
-            if (src == null)
+            if (id <= 0)
             {
-                return new FbmPurchaseListModel { Count = 0, List = new List<FbmPurchaseRecordModel>() };
+                MessageBox.Show("无效的记录 id，无法删除。");
+                return false;
             }
 
-            return new FbmPurchaseListModel
+            var parameters = new Dictionary<string, string>()
             {
-                Count = src.count,
-                List = src.list == null
-                    ? new List<FbmPurchaseRecordModel>()
-                    : src.list.Select(MapFbmRow).ToList()
+                {"id", id.ToString(CultureInfo.InvariantCulture)},
             };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/fbmDel", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "删除失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
         }
 
-        private static FbmPurchaseRecordModel MapFbmRow(FbmRowApi r)
-        {
-            if (r == null)
-            {
-                return new FbmPurchaseRecordModel();
-            }
+        #endregion
 
-            return new FbmPurchaseRecordModel
+        #region 备货汇总（产品库存）
+
+        /// <summary>
+        /// 备货汇总分页列表，GET <c>crm/purchase/stockManageList</c>。
+        /// </summary>
+        public static async Task<StockProductListModel> StockManageList(int pageNum = 1, int pageSize = 20)
+        {
+            var parameters = new Dictionary<string, string>()
             {
-                Id = r.id,
-                OrderId = r.orderId ?? "",
-                PurchaseDate = ParsePurchaseDateToken(r.addTime),
-                Expense = r.expense ?? 0,
-                BuyerName = r.uname ?? r.Uname ?? "",
-                AccountName = r.accountName ?? "",
-                Payment = r.payment ?? 0,
-                Remark = r.remark ?? ""
+                {"pageNum", pageNum.ToString()},
+                {"pageSize", pageSize.ToString()},
             };
-        }
 
-        private static DateTime? ParsePurchaseDateToken(object token)
-        {
-            if (token == null)
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockManageList", parameters);
+            if (result.IsSuccess)
             {
-                return null;
-            }
-
-            if (token is DateTime dt)
-            {
-                return dt.Date;
-            }
-
-            if (token is long l)
-            {
-                if (l > 1_000_000_000_000L)
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<StockProductListModel>>(result.Content);
+                if (response.State == 0)
                 {
-                    return DateTimeOffset.FromUnixTimeMilliseconds(l).LocalDateTime.Date;
+                    return response.Value ?? new StockProductListModel { Count = 0, List = new List<StockProductRecordModel>() };
                 }
 
-                return DateTimeOffset.FromUnixTimeSeconds(l).LocalDateTime.Date;
+                MessageBox.Show(response.Desc ?? "获取产品库存列表失败");
             }
-
-            if (token is int i)
+            else
             {
-                return DateTimeOffset.FromUnixTimeSeconds(i).LocalDateTime.Date;
-            }
-
-            if (token is double d)
-            {
-                var n = (long)d;
-                if (n > 1_000_000_000_000L)
-                {
-                    return DateTimeOffset.FromUnixTimeMilliseconds(n).LocalDateTime.Date;
-                }
-
-                return DateTimeOffset.FromUnixTimeSeconds(n).LocalDateTime.Date;
-            }
-
-            if (token is string s)
-            {
-                if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed))
-                {
-                    return parsed.Date;
-                }
-
-                if (DateTime.TryParse(s, out var parsed2))
-                {
-                    return parsed2.Date;
-                }
+                MessageBox.Show(result.ErrorMessage());
             }
 
             return null;
         }
 
-        private sealed class FbmListApiData
+        /// <summary>
+        /// 备货汇总新增/编辑，GET <c>crm/purchase/stockManageEdit</c>（<c>pId</c>、<c>pName</c>）。
+        /// 始终传 <c>id</c>：新增为 <c>0</c>，修改为实际主键。
+        /// </summary>
+        public static async Task<bool> StockManageEdit(StockProductRecordModel model)
         {
-            public int count { get; set; }
-            public List<FbmRowApi> list { get; set; }
+            if (model == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.ProductCode))
+            {
+                MessageBox.Show("请输入产品编码");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.ProductName))
+            {
+                MessageBox.Show("请输入产品名称");
+                return false;
+            }
+
+            var parameters = new Dictionary<string, string>()
+            {
+                {"id", model.Id.ToString()},
+                {"pId", model.ProductCode.Trim()},
+                {"pName", model.ProductName.Trim()},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockManageEdit", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "保存失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
         }
 
-        private sealed class FbmRowApi
+        /// <summary>
+        /// 备货汇总删除（若后端未提供此路由，请按实际文档修改路径或移除此方法）。
+        /// </summary>
+        public static async Task<bool> StockManageDelete(int id)
         {
-            public int id { get; set; }
-            public string orderId { get; set; }
-            public object addTime { get; set; }
-            public decimal? expense { get; set; }
-            public string uname { get; set; }
-            public string Uname { get; set; }
-            public string accountName { get; set; }
-            public int? payment { get; set; }
-            public string remark { get; set; }
+            var parameters = new Dictionary<string, string>()
+            {
+                {"id", id.ToString()},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockManageDel", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "删除失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
+        }
+
+        #endregion
+
+        #region 备货采购（备货流水 stockList / stockEdit）
+
+        /// <summary>
+        /// 备货流水分页列表，GET <c>crm/purchase/stockList</c>。<paramref name="type"/> 必填且不能为 0；
+        /// 与前端库存视图一致时常用：<see cref="StockPurchaseConstants.StockListInTransit"/>（模块2）、<see cref="StockPurchaseConstants.StockListArrivedWarehouse"/>（模块3）、<see cref="StockPurchaseConstants.StockListDeadstock"/>（模块4）。
+        /// </summary>
+        public static async Task<StockPurchaseListModel> StockList(int type, int pageNum = 1, int pageSize = 20,
+            string productCode = null, string buyerName = null, string purId = null)
+        {
+            if (type == 0)
+            {
+                MessageBox.Show("请选择库存/货件类型筛选条件");
+                return null;
+            }
+
+            var parameters = new Dictionary<string, string>()
+            {
+                {"type", type.ToString(CultureInfo.InvariantCulture)},
+                {"pageNum", pageNum.ToString(CultureInfo.InvariantCulture)},
+                {"pageSize", pageSize.ToString(CultureInfo.InvariantCulture)},
+                {"p_id", productCode ?? ""},
+                {"buyer_name", buyerName ?? ""},
+                {"purId", purId ?? ""},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockList", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<StockPurchaseListModel>>(result.Content);
+                if (response.State == 0)
+                {
+                    return response.Value ?? new StockPurchaseListModel { Count = 0, List = new List<StockPurchaseRecordModel>() };
+                }
+
+                MessageBox.Show(response.Desc ?? "获取备货采购列表失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 备货采购新增/编辑，GET <c>crm/purchase/stockEdit</c>。
+        /// <c>addTime</c> 与 <c>fbmEdit</c> 一致：日期字符串 <c>yyyy-MM-dd</c>（由 <see cref="StockPurchaseRecordModel.PurchaseDate"/> 格式化；无日期则为空串）。
+        /// <c>instockTime</c> 为到仓时间，<strong>精确到自然日</strong>，提交 <c>yyyy-MM-dd</c>。
+        /// </summary>
+        public static async Task<bool> StockPurchaseEdit(StockPurchaseRecordModel model)
+        {
+            if (model == null)
+            {
+                return false;
+            }
+
+            model.RecalculateUnitFieldsForSave();
+
+            var parameters = new Dictionary<string, string>()
+            {
+                {"id", model.Id.ToString(CultureInfo.InvariantCulture)},
+                {"purId", model.PurId ?? ""},
+                {"pId", model.ProductCode ?? ""},
+                {"pName", model.ProductName ?? ""},
+                {"quantity", model.Quantity.ToString(CultureInfo.InvariantCulture)},
+                {"expense", model.Expense.ToString(CultureInfo.InvariantCulture)},
+                {"unitValue", model.UnitValue.ToString(CultureInfo.InvariantCulture)},
+                {"payment", model.Payment.ToString(CultureInfo.InvariantCulture)},
+                {"transFee", model.TransFee.ToString(CultureInfo.InvariantCulture)},
+                {"unitTransFee", model.UnitTransFee.ToString(CultureInfo.InvariantCulture)},
+                {"unitCost", model.UnitCost.ToString(CultureInfo.InvariantCulture)},
+                {"userName", model.UserName ?? ""},
+                {"type", model.ShipmentType.ToString(CultureInfo.InvariantCulture)},
+                {"addTime", model.PurchaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""},
+                {"instockTime", model.InstockDateTime.HasValue ? model.InstockDateTime.Value.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : ""},
+                {"remark", model.Remark ?? ""},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockEdit", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "保存失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
         }
 
         #endregion

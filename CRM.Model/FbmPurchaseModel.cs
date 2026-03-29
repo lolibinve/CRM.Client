@@ -21,7 +21,9 @@ namespace CRM.Model
     }
 
     /// <summary>
-    /// FBM 采购记录（现金采购），对应 <c>PurchaseRecordFbm</c> / <c>fbmEdit</c> 字段。
+    /// FBM 采购记录。列表返回字段名为 <c>purchaseDate</c>、<c>buyerName</c>、<c>purchaseAccount</c> 等；
+    /// 与 HttpClient 默认 JSON（camelCase）属性名一致，并辅以 <see cref="DataMemberAttribute"/>。
+    /// 编辑提交 <c>fbmEdit</c> 仍使用 <see cref="PurchaseDateEdit"/>、<see cref="PurchaseAccount"/> 等映射到表单。
     /// </summary>
     [DataContract]
     [AddINotifyPropertyChangedInterface]
@@ -33,22 +35,33 @@ namespace CRM.Model
         [DataMember(Name = "orderId")]
         public string OrderId { get; set; }
 
-        /// <summary>采购时间（界面编辑用）。</summary>
-        [DataMember(Name = "addTime")]
-        public DateTime? PurchaseDate { get; set; }
+        /// <summary>列表接口 <c>purchaseDate</c>，Unix 秒。</summary>
+        [DataMember(Name = "purchaseDate")]
+        public long PurchaseDate { get; set; }
+
+        /// <summary>采购时间（界面 DatePicker）；与 <see cref="PurchaseDate"/> 互转。</summary>
+        [IgnoreDataMember]
+        public DateTime? PurchaseDateEdit
+        {
+            get =>
+                PurchaseDate <= 0
+                    ? (DateTime?)null
+                    : DateTimeOffset.FromUnixTimeSeconds(PurchaseDate).LocalDateTime.Date;
+            set =>
+                PurchaseDate = value.HasValue
+                    ? new DateTimeOffset(value.Value.Date).ToUnixTimeSeconds()
+                    : 0;
+        }
 
         [DataMember(Name = "expense")]
         public decimal Expense { get; set; }
 
-        /// <summary>业务员，接口表单字段 <c>Uname</c>。</summary>
-        [DataMember(Name = "uname")]
+        [DataMember(Name = "buyerName")]
         public string BuyerName { get; set; }
 
-        /// <summary>采购账号，接口 <c>accountName</c>。</summary>
-        [DataMember(Name = "accountName")]
-        public string AccountName { get; set; }
+        [DataMember(Name = "purchaseAccount")]
+        public string PurchaseAccount { get; set; }
 
-        /// <summary>支付方式：0 现金，1 账期，2 诚意赊（与后端约定一致时可调整）。</summary>
         [DataMember(Name = "payment")]
         public int Payment { get; set; }
 
@@ -56,6 +69,7 @@ namespace CRM.Model
         public string Remark { get; set; }
 
         /// <summary>列表展示用。</summary>
+        [IgnoreDataMember]
         [DependsOn(nameof(Payment))]
         public string PaymentDisplay
         {
@@ -70,5 +84,9 @@ namespace CRM.Model
                 }
             }
         }
+
+        /// <summary>列表勾选（仅 UI）。</summary>
+        [DataMember(IsRequired = false)]
+        public bool IsCheck { get; set; }
     }
 }

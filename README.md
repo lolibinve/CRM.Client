@@ -21,3 +21,10 @@ todo：完成其他接口之后
 
 
 密码 ：libin 1236456
+
+
+前端对应后端接口如下：
+PurchaseAccount  采购账户管理 列表 accountList  新增修改 accountEdit
+FbmPurchase  FBM采购  列表  fbmList  新增修改  fbmEdit
+StockProduct  备货产品  列表    stockManageList      新增修改  stockManageEdit
+StockPurchase  备货采购  列表     stockList     新增修改  stockEdit

@@ -1,9 +1,10 @@
-<Window x:Class="CRM.Modular.Views.AddProcurementAccountView"
+<Window x:Class="CRM.Modular.Views.AddPurchaseAccountView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CRM.Modular.Views"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Language="zh-CN"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="420" Width="560" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow">
@@ -53,7 +54,18 @@
         <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Text="{Binding Account.ProcurementAccount,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Row="2" Grid.Column="0" Text="资金类型:"/>
-        <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" Text="{Binding Account.FundType,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+        <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
+            <RadioButton Width="120" Height="35"
+                         Content="现金存入"
+                         GroupName="PurchaseAccountFundType"
+                         IsChecked="{Binding IsCashType, Mode=TwoWay}"
+                         Style="{StaticResource MaterialDesignChoiceChipAccentOutlineRadioButton}"/>
+            <RadioButton Width="150" Height="35" Margin="16,0,0,0"
+                         Content="账期/诚意赊"
+                         GroupName="PurchaseAccountFundType"
+                         IsChecked="{Binding IsCreditType, Mode=TwoWay}"
+                         Style="{StaticResource MaterialDesignChoiceChipAccentOutlineRadioButton}"/>
+        </StackPanel>
 
         <TextBlock Grid.Row="3" Grid.Column="0" Text="备注:"/>
         <TextBox Grid.Row="3" Grid.Column="1" Grid.RowSpan="2" Grid.ColumnSpan="4"

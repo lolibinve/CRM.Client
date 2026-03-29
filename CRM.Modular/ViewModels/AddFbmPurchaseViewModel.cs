@@ -50,7 +50,7 @@ namespace CRM.Modular.ViewModels
                 var info = IoC.Get<CacheInfo>();
                 Record = new FbmPurchaseRecordModel
                 {
-                    PurchaseDate = DateTime.Now.Date,
+                    PurchaseDateEdit = DateTime.Now.Date,
                     BuyerName = info?.LoginAccount,
                     Payment = 0,
                 };
@@ -72,9 +72,9 @@ namespace CRM.Modular.ViewModels
                 }
             }
 
-            if (!string.IsNullOrEmpty(Record.AccountName) && !AccountOptions.Contains(Record.AccountName))
+            if (!string.IsNullOrEmpty(Record.PurchaseAccount) && !AccountOptions.Contains(Record.PurchaseAccount))
             {
-                AccountOptions.Insert(0, Record.AccountName);
+                AccountOptions.Insert(0, Record.PurchaseAccount);
             }
         }
 
@@ -86,13 +86,13 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
-            if (!Record.PurchaseDate.HasValue)
+            if (!Record.PurchaseDateEdit.HasValue)
             {
                 MessageBox.Show("请选择采购时间");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(Record.AccountName))
+            if (string.IsNullOrWhiteSpace(Record.PurchaseAccount))
             {
                 MessageBox.Show("请选择采购账号");
                 return;
@@ -138,7 +138,7 @@ namespace CRM.Modular.ViewModels
                 PurchaseDate = s.PurchaseDate,
                 Expense = s.Expense,
                 BuyerName = s.BuyerName,
-                AccountName = s.AccountName,
+                PurchaseAccount = s.PurchaseAccount,
                 Payment = s.Payment,
                 Remark = s.Remark,
             };

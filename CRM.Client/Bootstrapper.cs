@@ -1,4 +1,4 @@
-﻿using Caliburn.Micro;
+using Caliburn.Micro;
 using CRM.Client.ViewModels;
 using CRM.Modular.Models;
 using CRM.Modular.ViewModels;
@@ -56,7 +56,7 @@ namespace CRM.Client
             container.PerRequest<AddOrderViewModel>();
             container.PerRequest<StandardPriceViewModel>();
 
-            container.PerRequest<AddProcurementAccountViewModel>();
+            container.PerRequest<AddPurchaseAccountViewModel>();
             container.PerRequest<PurchaseAccountViewModel>();
 
             container.PerRequest<FbmPurchaseViewModel>();

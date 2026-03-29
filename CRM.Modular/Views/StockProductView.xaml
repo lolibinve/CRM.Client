@@ -1,12 +1,113 @@
-﻿<UserControl x:Class="CRM.Modular.Views.StockProductView"
+<UserControl x:Class="CRM.Modular.Views.StockProductView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:CRM.Modular.Views"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             xmlns:t="clr-namespace:Aipark.Wpf.Controls;assembly=Aipark.Wpf.Controls"
+             xmlns:cm="http://caliburnmicro.com"
+             mc:Ignorable="d"
+             Language="zh-CN"
+             d:DesignHeight="1080" d:DesignWidth="1920">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <Style TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/CRM.Modular;component/BaseThemes.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <Grid>
-            
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Button x:Name="Query" Width="88" Height="35" Content="查询"/>
+            <Button x:Name="Add" Width="88" Height="35" Content="新增" Margin="10,0,0,0"/>
+            <Button x:Name="Delete" Width="88" Height="35" Content="删除" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <DataGrid x:Name="RecordLst"
+                  Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  LoadingRow="Lst_LoadingRow"
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  SelectedItem="{Binding SelectItem}"
+                  VerticalAlignment="Stretch"
+                  cm:Message.Attach="[Event MouseDoubleClick] = [Action Record_MouseDoubleClick($source,$eventArgs)]">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="选中" Width="56" IsReadOnly="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox Style="{StaticResource MaterialDesignAccentCheckBox}"
+                                      IsThreeState="False"
+                                      cm:Message.Attach="[Event Click] = [Action RecordItem_CheckedClick($source,$eventArgs)]"
+                                      IsChecked="{Binding IsCheck, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="序号" Width="56" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGridRow}}, Path=Header}"
+                                       VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="产品编码" Width="160" Binding="{Binding ProductCode}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="产品名称" Width="220" Binding="{Binding ProductName}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="采购运输中库存" Width="140"
+                                    Binding="{Binding TransitStock, StringFormat={}{0:F0}}"
+                                    ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="到仓库存" Width="120"
+                                    Binding="{Binding WarehouseStock, StringFormat={}{0:F0}}"
+                                    ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="滞销库存" Width="120"
+                                    Binding="{Binding DeadStock, StringFormat={}{0:F0}}"
+                                    ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="售罄库存" Width="120"
+                                    Binding="{Binding SellOut, StringFormat={}{0:F0}}"
+                                    ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="累计采购数量" Width="120"
+                                    Binding="{Binding SumCount, StringFormat={}{0:F0}}"
+                                    ElementStyle="{x:Null}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <t:Pagination x:Name="Pagination" Height="40"
+                          PageNumber="{Binding PageInfo.PageNum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          ItemsCount="{Binding PageInfo.Total}"
+                          PageSize="{Binding PageInfo.PageSize}"
+                          PagesCount="{Binding PageInfo.PagesCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          PageSizeOptionsEnable="False"
+                          cm:Message.Attach="[Event PageNumberChanged]= [Action Pagination_OnPageNumberChanged($source,$eventArgs)]"/>
+        </Grid>
+
+        <Grid Grid.Row="0" Grid.RowSpan="3">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsProgressIndeterminate}" Value="True">
+                            <Setter Property="Background" Value="#55eaeaea"/>
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsProgressIndeterminate}" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <t:ProgressRing HorizontalAlignment="Center" VerticalAlignment="Center"
+                            IsIndeterminate="{Binding IsProgressIndeterminate}"/>
+        </Grid>
     </Grid>
 </UserControl>
