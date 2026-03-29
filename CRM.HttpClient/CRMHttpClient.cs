@@ -27,8 +27,8 @@ namespace HttpLib
             Dictionary<string, string> parameters = null, Dictionary<string, string> headers = null, string content = null,
             Dictionary<string, string> formDataStrDic = null, Dictionary<string, string> formDataFileDic = null, CancellationTokenSource cts = null,bool isStream = false)
         {
-            string absoluteUri = new Uri("http://175.24.61.38:8080").AbsoluteUri + relativeUri.TrimStart('/');
-            //string absoluteUri = new Uri("http://192.168.1.8:8080").AbsoluteUri + relativeUri.TrimStart('/');
+            //string absoluteUri = new Uri("http://175.24.61.38:8080").AbsoluteUri + relativeUri.TrimStart('/');
+            string absoluteUri = new Uri("http://192.168.1.7:8080").AbsoluteUri + relativeUri.TrimStart('/');
 
             HttpResult httpResult = new HttpResult();
 

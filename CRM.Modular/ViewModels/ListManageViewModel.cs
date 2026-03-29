@@ -1,5 +1,4 @@
-﻿using Aipark.Wpf.Controls;
-using Caliburn.Micro;
+﻿using Caliburn.Micro;
 using CLog;
 using CRM.Model;
 using CRM.Modular.Models;
@@ -8,25 +7,18 @@ using PropertyChanged;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO.Packaging;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using MessageBox = System.Windows.MessageBox;
-using System.Runtime.InteropServices.ComTypes;
-using System.Windows.Documents;
 
 namespace CRM.Modular.ViewModels
 {
     /// <summary>
-    /// 上架产品管理
+    /// 上架产品管理  已废除
     /// </summary>
     [AddINotifyPropertyChangedInterface]
     public class ListManageViewModel : Caliburn.Micro.Screen

@@ -4,7 +4,6 @@ using CRM.Model;
 using CRM.Modular.Models;
 using HttpLib;
 using OfficeOpenXml;
-using OfficeOpenXml.Style;
 using PropertyChanged;
 using System;
 using System.Collections;
@@ -14,21 +13,18 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
-using static System.Windows.Forms.AxHost;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using MessageBox = System.Windows.MessageBox;
 using Screen = Caliburn.Micro.Screen;
-using TextBox = System.Windows.Controls.TextBox;
 
 namespace CRM.Modular.ViewModels
 {
+    /// <summary>
+    /// 订单管理
+    /// </summary>
     [AddINotifyPropertyChangedInterface]
     public class OrderManageViewModel : Screen
     {
@@ -128,23 +124,23 @@ namespace CRM.Modular.ViewModels
         }
 
 
-        public async void CopyAdd()
-        {
-            var model = OrderLst.FirstOrDefault(x => x.IsCheck);
-            if (model != null)
-            {
-                AddOrderViewModel addOrderViewModel = new AddOrderViewModel(model);
-                var result = await windowManager.ShowDialogAsync(addOrderViewModel);
-                if(result == true)
-                {
-                    await QueryBase(PageInfo.PageNum, OrderQueryStatus);
-                }
-            }
-            else
-            {
-                MessageBox.Show("亲，请先勾选订单");
-            }
-        }
+        //public async void CopyAdd()
+        //{
+        //    var model = OrderLst.FirstOrDefault(x => x.IsCheck);
+        //    if (model != null)
+        //    {
+        //        AddOrderViewModel addOrderViewModel = new AddOrderViewModel(model);
+        //        var result = await windowManager.ShowDialogAsync(addOrderViewModel);
+        //        if(result == true)
+        //        {
+        //            await QueryBase(PageInfo.PageNum, OrderQueryStatus);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        MessageBox.Show("亲，请先勾选订单");
+        //    }
+        //}
 
         public async void Import()
         {

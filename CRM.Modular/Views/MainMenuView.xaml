@@ -31,9 +31,23 @@
             <TabItem Header="汇率管理" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" Visibility="{Binding IsAdmin,Converter={StaticResource BooleanToVisibilityConverter}}">
                 <ContentControl x:Name="Exchange" Margin="20,0,10,0"/>
             </TabItem>
-            <TabItem Header="上架管理" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" >
-                <ContentControl x:Name="ListManage" Margin="20,0,10,0"/>
+            <TabItem Header="采购账户" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" >
+                <ContentControl x:Name="PurchaseAccount" Margin="20,0,10,0"/>
             </TabItem>
+            <TabItem Header="备货产品" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" >
+                <ContentControl x:Name="StockProduct" Margin="20,0,10,0"/>
+            </TabItem>
+            <TabItem Header="FBM采购" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" >
+                <ContentControl x:Name="FbmPurchase" Margin="20,0,10,0"/>
+            </TabItem>
+            <TabItem Header="备货采购" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" >
+                <ContentControl x:Name="StockPurchase" Margin="20,0,10,0"/>
+            </TabItem>
+           
+            
+            <!--<TabItem Header="上架管理" Width="auto" Height="70"  Style="{StaticResource MaterialDesignTabItem}" >
+                <ContentControl x:Name="ListManage" Margin="20,0,10,0"/>
+            </TabItem>-->
         </TabControl>
     </Grid>
 </UserControl>

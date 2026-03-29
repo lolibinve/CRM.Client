@@ -55,6 +55,18 @@ namespace CRM.Client
             container.PerRequest<ListManageViewModel>();
             container.PerRequest<AddOrderViewModel>();
             container.PerRequest<StandardPriceViewModel>();
+
+            container.PerRequest<AddProcurementAccountViewModel>();
+            container.PerRequest<PurchaseAccountViewModel>();
+
+            container.PerRequest<FbmPurchaseViewModel>();
+            container.PerRequest<AddFbmPurchaseViewModel>();
+
+            container.PerRequest<StockProductViewModel>();
+            container.PerRequest<AddStockProductViewModel>();
+
+            container.PerRequest<StockPurchaseViewModel>();
+            container.PerRequest<AddStockPurchaseViewModel>();
         }
 
         protected override IEnumerable<Assembly> SelectAssemblies()

@@ -14,7 +14,15 @@ namespace CRM.Modular.ViewModels
         public OrderManageViewModel Order { get; set; }
         public ProductConfigViewModel Product { get; set; }
         public ExchangeRateViewModel Exchange { get; set; }
-        public ListManageViewModel ListManage { get; set; }
+
+        public PurchaseAccountViewModel PurchaseAccount { get; set; }
+        public FbmPurchaseViewModel FbmPurchase { get; set; }
+        public StockPurchaseViewModel StockPurchase { get; set; }
+        public StockProductViewModel StockProduct { get; set; }
+
+        
+
+        //public ListManageViewModel ListManage { get; set; }
 
         private bool _isAdmin;
         public bool IsAdmin
@@ -30,7 +38,13 @@ namespace CRM.Modular.ViewModels
             Order = IoC.Get<OrderManageViewModel>();
             Product = IoC.Get<ProductConfigViewModel>();
             Exchange = IoC.Get<ExchangeRateViewModel>();
-            ListManage = IoC.Get<ListManageViewModel>();
+
+            PurchaseAccount = IoC.Get<PurchaseAccountViewModel>();
+            FbmPurchase = IoC.Get<FbmPurchaseViewModel>();
+            StockPurchase = IoC.Get<StockPurchaseViewModel>();
+            StockProduct = IoC.Get<StockProductViewModel>();
+
+            //ListManage = IoC.Get<ListManageViewModel>();
 
             var info = IoC.Get<CacheInfo>();
             IsAdmin = info.IsAdmin;

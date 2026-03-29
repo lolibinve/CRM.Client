@@ -84,7 +84,7 @@
             <Button x:Name="Send" Width="80" Height="35" Content="发货" Margin="10,0,0,0"  />
             <Button x:Name="Modify" Width="80" Height="35" Content="修改" Margin="10,0,0,0" />
             <Button x:Name="Delete" Width="80" Height="35" Content="删除" Margin="10,0,0,0" Visibility="{Binding IsAdmin,Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            <Button x:Name="CopyAdd" Width="130" Height="35" Content="新增补发订单" Margin="10,0,0,0" />
+            <!--<Button x:Name="CopyAdd" Width="130" Height="35" Content="新增补发订单" Margin="10,0,0,0" />-->
 
         </StackPanel>
 
@@ -200,9 +200,9 @@
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="业务员"  Binding="{Binding Account}" IsReadOnly="True" ElementStyle="{x:Null}"></DataGridTextColumn>
                 <DataGridTextColumn Header="国家"  Binding="{Binding Country}" IsReadOnly="True" ElementStyle="{x:Null}"></DataGridTextColumn>
-                <DataGridTextColumn Header="货币"  Binding="{Binding MoneyType}" IsReadOnly="True" ElementStyle="{x:Null}"></DataGridTextColumn>
+                <!--<DataGridTextColumn Header="货币"  Binding="{Binding MoneyType}" IsReadOnly="True"  ElementStyle="{x:Null}"></DataGridTextColumn>
                 <DataGridTextColumn Header="购买数"  Binding="{Binding QuantityPurchased,UpdateSourceTrigger=PropertyChanged}" ElementStyle="{x:Null}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="结算金额"  Binding="{Binding SettleAmount,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="结算金额"  Binding="{Binding SettleAmount,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" ElementStyle="{x:Null}"/>-->
                 <!--<DataGridTextColumn Header="外汇汇率"  Binding="{Binding ExchangeRafe,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="外汇金额"  Binding="{Binding ExchangeAmount,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="回款汇率"  Binding="{Binding BackExchange,UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True"/>-->

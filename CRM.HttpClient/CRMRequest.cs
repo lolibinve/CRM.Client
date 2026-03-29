@@ -1,6 +1,8 @@
-﻿using HttpLib.HttpClient;
+using HttpLib.HttpClient;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
@@ -667,6 +669,282 @@ namespace HttpLib
 
             return false;
         }
+
+        #region 采购账户
+
+        /// <summary>
+        /// 采购账号分页列表，对应 GET <c>crm/purchase/accountList</c>（pageNum、pageSize）。
+        /// </summary>
+        public static async Task<PurchaseAccountModel> PurchaseAccountList(int pageNum = 1, int pageSize = 500)
+        {
+            var parameters = new Dictionary<string, string>()
+            {
+                {"pageNum", pageNum.ToString()},
+                {"pageSize", pageSize.ToString()},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/accountList", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<PurchaseAccountListApiData>>(result.Content);
+                if (response.State == 0)
+                {
+                    return MapPurchaseAccountModel(response.Value);
+                }
+
+                MessageBox.Show(response.Desc ?? "获取采购账号列表失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return null;
+        }
+
+        private static PurchaseAccountModel MapPurchaseAccountModel(PurchaseAccountListApiData src)
+        {
+            if (src == null)
+            {
+                return new PurchaseAccountModel { AccountLst = new List<ProcurementAccountLstModel>(), Count = 0 };
+            }
+
+            return new PurchaseAccountModel
+            {
+                Count = src.count,
+                AccountLst = src.list == null
+                    ? new List<ProcurementAccountLstModel>()
+                    : src.list.Select(MapPurchaseAccountRow).ToList()
+            };
+        }
+
+        private static ProcurementAccountLstModel MapPurchaseAccountRow(PurchaseAccountRowApi r)
+        {
+            if (r == null) return new ProcurementAccountLstModel();
+            return new ProcurementAccountLstModel
+            {
+                Id = r.id,
+                AddTimeToken = r.addTime,
+                Amount = r.moneyIn ?? 0,
+                ProcurementAccount = r.name ?? "",
+                TypeRaw = r.type,
+                Remark = r.remark ?? "",
+                BalanceCash = r.balanceCash,
+                BalanceDebt = r.balanceDebt
+            };
+        }
+
+        /// <summary>与接口 JSON（camelCase）一致，仅用于反序列化 data 节点。</summary>
+        private sealed class PurchaseAccountListApiData
+        {
+            public int count { get; set; }
+            public List<PurchaseAccountRowApi> list { get; set; }
+        }
+
+        private sealed class PurchaseAccountRowApi
+        {
+            public int id { get; set; }
+            public object addTime { get; set; }
+            public decimal? moneyIn { get; set; }
+            public string name { get; set; }
+            public object type { get; set; }
+            public string remark { get; set; }
+            public decimal? balanceCash { get; set; }
+            public decimal? balanceDebt { get; set; }
+        }
+
+        #endregion
+
+        #region FBM 采购
+
+        /// <summary>
+        /// FBM（现金采购）分页列表，GET <c>crm/purchase/fbmList</c>。
+        /// </summary>
+        public static async Task<FbmPurchaseListModel> FbmList(int pageNum, int pageSize,
+            string purchaseAccount = null, string buyerName = null, string orderId = null,
+            string startDate = null, string endDate = null)
+        {
+            var parameters = new Dictionary<string, string>()
+            {
+                {"pageNum", pageNum.ToString()},
+                {"pageSize", pageSize.ToString()},
+                {"purchaseAccount", purchaseAccount ?? ""},
+                {"buyerName", buyerName ?? ""},
+                {"orderId", orderId ?? ""},
+                {"startDate", startDate ?? ""},
+                {"endDate", endDate ?? ""},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/fbmList", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<FbmListApiData>>(result.Content);
+                if (response.State == 0)
+                {
+                    return MapFbmListModel(response.Value);
+                }
+
+                MessageBox.Show(response.Desc ?? "获取 FBM 采购列表失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// FBM 采购新增/编辑，GET <c>crm/purchase/fbmEdit</c>（与 <c>accountEdit</c> 参数一致）。
+        /// </summary>
+        public static async Task<bool> FbmPurchaseEdit(FbmPurchaseRecordModel model)
+        {
+            if (model == null)
+            {
+                return false;
+            }
+
+            var parameters = new Dictionary<string, string>()
+            {
+                {"id", model.Id.ToString()},
+                {"orderId", model.OrderId ?? ""},
+                {"addTime", model.PurchaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""},
+                {"expense", model.Expense.ToString(CultureInfo.InvariantCulture)},
+                {"Uname", model.BuyerName ?? ""},
+                {"accountName", model.AccountName ?? ""},
+                {"payment", model.Payment.ToString(CultureInfo.InvariantCulture)},
+                {"remark", model.Remark ?? ""},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/fbmEdit", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "保存失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
+        }
+
+        private static FbmPurchaseListModel MapFbmListModel(FbmListApiData src)
+        {
+            if (src == null)
+            {
+                return new FbmPurchaseListModel { Count = 0, List = new List<FbmPurchaseRecordModel>() };
+            }
+
+            return new FbmPurchaseListModel
+            {
+                Count = src.count,
+                List = src.list == null
+                    ? new List<FbmPurchaseRecordModel>()
+                    : src.list.Select(MapFbmRow).ToList()
+            };
+        }
+
+        private static FbmPurchaseRecordModel MapFbmRow(FbmRowApi r)
+        {
+            if (r == null)
+            {
+                return new FbmPurchaseRecordModel();
+            }
+
+            return new FbmPurchaseRecordModel
+            {
+                Id = r.id,
+                OrderId = r.orderId ?? "",
+                PurchaseDate = ParsePurchaseDateToken(r.addTime),
+                Expense = r.expense ?? 0,
+                BuyerName = r.uname ?? r.Uname ?? "",
+                AccountName = r.accountName ?? "",
+                Payment = r.payment ?? 0,
+                Remark = r.remark ?? ""
+            };
+        }
+
+        private static DateTime? ParsePurchaseDateToken(object token)
+        {
+            if (token == null)
+            {
+                return null;
+            }
+
+            if (token is DateTime dt)
+            {
+                return dt.Date;
+            }
+
+            if (token is long l)
+            {
+                if (l > 1_000_000_000_000L)
+                {
+                    return DateTimeOffset.FromUnixTimeMilliseconds(l).LocalDateTime.Date;
+                }
+
+                return DateTimeOffset.FromUnixTimeSeconds(l).LocalDateTime.Date;
+            }
+
+            if (token is int i)
+            {
+                return DateTimeOffset.FromUnixTimeSeconds(i).LocalDateTime.Date;
+            }
+
+            if (token is double d)
+            {
+                var n = (long)d;
+                if (n > 1_000_000_000_000L)
+                {
+                    return DateTimeOffset.FromUnixTimeMilliseconds(n).LocalDateTime.Date;
+                }
+
+                return DateTimeOffset.FromUnixTimeSeconds(n).LocalDateTime.Date;
+            }
+
+            if (token is string s)
+            {
+                if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed))
+                {
+                    return parsed.Date;
+                }
+
+                if (DateTime.TryParse(s, out var parsed2))
+                {
+                    return parsed2.Date;
+                }
+            }
+
+            return null;
+        }
+
+        private sealed class FbmListApiData
+        {
+            public int count { get; set; }
+            public List<FbmRowApi> list { get; set; }
+        }
+
+        private sealed class FbmRowApi
+        {
+            public int id { get; set; }
+            public string orderId { get; set; }
+            public object addTime { get; set; }
+            public decimal? expense { get; set; }
+            public string uname { get; set; }
+            public string Uname { get; set; }
+            public string accountName { get; set; }
+            public int? payment { get; set; }
+            public string remark { get; set; }
+        }
+
+        #endregion
 
         /// <summary>
         /// 下载文件接口
