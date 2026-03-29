@@ -1022,10 +1022,10 @@ namespace HttpLib
 
         /// <summary>
         /// 备货流水分页列表，GET <c>crm/purchase/stockList</c>。<paramref name="type"/> 必填且不能为 0；
-        /// 与前端库存视图一致时常用：<see cref="StockPurchaseConstants.StockListInTransit"/>（模块2）、<see cref="StockPurchaseConstants.StockListArrivedWarehouse"/>（模块3）、<see cref="StockPurchaseConstants.StockListDeadstock"/>（模块4）。
+        /// 与前端库存视图一致时常用：<see cref="StockPurchaseConstants.StockListInTransit"/>（模块2）、<see cref="StockPurchaseConstants.StockListArrivedWarehouse"/>（模块3）、<see cref="StockPurchaseConstants.StockListDeadstock"/>（模块4）、<see cref="StockPurchaseConstants.StockListSoldOut"/>（模块5）。
         /// </summary>
         public static async Task<StockPurchaseListModel> StockList(int type, int pageNum = 1, int pageSize = 20,
-            string productCode = null, string buyerName = null, string purId = null)
+            string productCode = null, string buyerName = null, string purId = null, string purchaseAccount = null)
         {
             if (type == 0)
             {
@@ -1038,9 +1038,10 @@ namespace HttpLib
                 {"type", type.ToString(CultureInfo.InvariantCulture)},
                 {"pageNum", pageNum.ToString(CultureInfo.InvariantCulture)},
                 {"pageSize", pageSize.ToString(CultureInfo.InvariantCulture)},
-                {"p_id", productCode ?? ""},
-                {"buyer_name", buyerName ?? ""},
+                {"pId", productCode ?? ""},
+                {"buyerName", buyerName ?? ""},
                 {"purId", purId ?? ""},
+                {"purchaseAccount", purchaseAccount ?? ""},
             };
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockList", parameters);
@@ -1090,6 +1091,7 @@ namespace HttpLib
                 {"unitTransFee", model.UnitTransFee.ToString(CultureInfo.InvariantCulture)},
                 {"unitCost", model.UnitCost.ToString(CultureInfo.InvariantCulture)},
                 {"userName", model.UserName ?? ""},
+                {"purchaseAccount", model.PurchaseAccount ?? ""},
                 {"type", model.ShipmentType.ToString(CultureInfo.InvariantCulture)},
                 {"addTime", model.PurchaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""},
                 {"instockTime", model.InstockDateTime.HasValue ? model.InstockDateTime.Value.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : ""},

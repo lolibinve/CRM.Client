@@ -76,6 +76,10 @@ namespace CRM.Model
         [DataMember(Name = "userName")]
         public string UserName { get; set; }
 
+        /// <summary>采购账号；列表/编辑与 <c>fbmEdit</c> 的 <c>purchaseAccount</c> 命名一致。</summary>
+        [DataMember(Name = "purchaseAccount")]
+        public string PurchaseAccount { get; set; }
+
         /// <summary>货件状态：<see cref="StockPurchaseConstants.ShipmentInTransit"/> / <see cref="StockPurchaseConstants.ShipmentArrived"/>。</summary>
         [DataMember(Name = "type")]
         public int ShipmentType { get; set; }
@@ -233,6 +237,9 @@ namespace CRM.Model
 
         /// <summary><c>stockList</c> 筛选：模块4 滞销库存（到仓满 60 天等由后端处理）。</summary>
         public const int StockListDeadstock = 3;
+
+        /// <summary><c>stockList</c> 筛选：模块5 售罄库存（数量归零等由后端处理）；<c>type</c> 需与后端约定一致。</summary>
+        public const int StockListSoldOut = 4;
 
         /// <summary>行数据：货件状态「采购运输中」。</summary>
         public const int ShipmentInTransit = 1;

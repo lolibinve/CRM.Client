@@ -14,7 +14,7 @@ namespace CRM.Modular.ViewModels
 {
     /// <summary>
     /// 备货采购列表：<c>stockList</c>。公共筛选：采购批次、业务员、产品编码；
-    /// <c>type</c> 区分模块2 采购运输库存 / 模块3 到仓库库存 / 模块4 滞销库存（与 <see cref="StockPurchaseConstants"/> 一致）。
+    /// <c>type</c> 区分模块2～5：采购运输 / 到仓 / 滞销 / 售罄（与 <see cref="StockPurchaseConstants"/> 一致）。
     /// </summary>
     [AddINotifyPropertyChangedInterface]
     public class StockPurchaseViewModel : Screen
@@ -36,24 +36,32 @@ namespace CRM.Modular.ViewModels
         /// <summary>筛选：产品编码 <c>p_id</c>。</summary>
         public string FilterProductCode { get; set; }
 
-        /// <summary>筛选：列表必填 <c>type</c>（模块2/3/4 库存视图）。</summary>
+        /// <summary>筛选：采购账号（与 <c>fbmList</c> 的 <c>purchaseAccount</c> 一致）。</summary>
+        public BindableCollection<string> AccountFilterList { get; set; } = new BindableCollection<string>();
+
+        public string SelectedFilterAccount { get; set; }
+
+        /// <summary>筛选：列表必填 <c>type</c>（模块2～5 库存视图）。</summary>
         public int FilterShipmentType { get; set; } = StockPurchaseConstants.StockListInTransit;
 
-        /// <summary>库存视图芯片：与 <c>FilterShipmentType</c> 同步（默认采购运输）。</summary>
+        /// <summary>库存视图芯片：与 <c>FilterShipmentType</c> 同步（默认模块2）。</summary>
         public bool statusTransit { get; set; } = true;
         public bool statusWarehouse { get; set; }
         public bool statusDeadstock { get; set; }
+        public bool statusSoldOut { get; set; }
 
         /// <summary>角标占位，与订单管理 Badged 一致；暂无分项统计时可保持空字符串。</summary>
         public string StockViewBadge0 { get; set; } = "";
         public string StockViewBadge1 { get; set; } = "";
         public string StockViewBadge2 { get; set; } = "";
+        public string StockViewBadge3 { get; set; } = "";
 
-        /// <summary>模块3、4 列表为只读查看；模块2 可新增与编辑。</summary>
+        /// <summary>模块3～5 列表为只读查看；模块2 可新增与编辑。</summary>
         [DependsOn(nameof(FilterShipmentType))]
         public bool IsReadOnlyStockView =>
             FilterShipmentType == StockPurchaseConstants.StockListArrivedWarehouse
-            || FilterShipmentType == StockPurchaseConstants.StockListDeadstock;
+            || FilterShipmentType == StockPurchaseConstants.StockListDeadstock
+            || FilterShipmentType == StockPurchaseConstants.StockListSoldOut;
 
         public BindableCollection<StockPurchaseRecordModel> RecordLst { get; set; } = new BindableCollection<StockPurchaseRecordModel>();
 
@@ -79,6 +87,7 @@ namespace CRM.Modular.ViewModels
             statusTransit = type == StockPurchaseConstants.StockListInTransit;
             statusWarehouse = type == StockPurchaseConstants.StockListArrivedWarehouse;
             statusDeadstock = type == StockPurchaseConstants.StockListDeadstock;
+            statusSoldOut = type == StockPurchaseConstants.StockListSoldOut;
             await QueryBase(1);
         }
 

@@ -47,6 +47,9 @@ namespace CRM.Modular.ViewModels
 
         public StockProductRecordModel SelectedProduct { get; set; }
 
+        /// <summary>采购账号下拉，与 <see cref="AddFbmPurchaseViewModel"/> 一致。</summary>
+        public BindableCollection<string> AccountOptions { get; set; } = new BindableCollection<string>();
+
         public string Title { get; set; }
 
         public bool IsModify { get; }
@@ -94,6 +97,7 @@ namespace CRM.Modular.ViewModels
             SelectedShipment = ShipmentItems.FirstOrDefault(s => s.Value == Record.ShipmentType) ?? ShipmentItems[0];
 
             _ = LoadProductOptionsAsync();
+            _ = LoadAccountOptionsAsync();
             SyncSelectedProductFromRecord();
         }
 
@@ -121,6 +125,24 @@ namespace CRM.Modular.ViewModels
             }
 
             SyncSelectedProductFromRecord();
+        }
+
+        private async Task LoadAccountOptionsAsync()
+        {
+            AccountOptions.Clear();
+            var data = await CRMRequest.PurchaseAccountList(1, 2000);
+            if (data?.AccountLst != null)
+            {
+                foreach (var n in data.AccountLst.Select(x => x.ProcurementAccount).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().OrderBy(x => x))
+                {
+                    AccountOptions.Add(n);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(Record.PurchaseAccount) && !AccountOptions.Contains(Record.PurchaseAccount))
+            {
+                AccountOptions.Insert(0, Record.PurchaseAccount);
+            }
         }
 
         public void OnSelectedProductChanged()
@@ -167,6 +189,12 @@ namespace CRM.Modular.ViewModels
             if (string.IsNullOrWhiteSpace(Record.ProductName))
             {
                 MessageBox.Show("产品名称不能为空");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(Record.PurchaseAccount))
+            {
+                MessageBox.Show("请选择采购账号");
                 return;
             }
 
@@ -250,6 +278,7 @@ namespace CRM.Modular.ViewModels
                 TransFee = s.TransFee,
                 UnitTransFee = s.UnitTransFee,
                 UserName = s.UserName,
+                PurchaseAccount = s.PurchaseAccount,
                 ShipmentType = s.ShipmentType,
                 InstockDateTime = s.InstockDateTime,
                 Remark = s.Remark,

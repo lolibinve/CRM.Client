@@ -92,7 +92,6 @@
         <Grid Grid.Row="2" Background="Transparent"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-
             <materialDesign:Badged Badge="{Binding Badged0}" >
                 <RadioButton Width="80" Height="35" IsChecked="{Binding statusNew}"
                         cm:Message.Attach="[Event Click]= [Action StateQuery(0)]"

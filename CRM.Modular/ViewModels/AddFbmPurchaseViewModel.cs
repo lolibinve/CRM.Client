@@ -26,8 +26,7 @@ namespace CRM.Modular.ViewModels
         public List<PaymentPickItem> PaymentItems { get; } = new List<PaymentPickItem>
         {
             new PaymentPickItem { Value = 0, Display = "现金支付" },
-            new PaymentPickItem { Value = 1, Display = "账期" },
-            new PaymentPickItem { Value = 2, Display = "诚意赊" },
+            new PaymentPickItem { Value = 1, Display = "账期/诚意赊" },
         };
 
         public PaymentPickItem SelectedPayment { get; set; }
