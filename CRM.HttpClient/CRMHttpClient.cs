@@ -1,4 +1,4 @@
-﻿using HttpLib.HttpClient;
+using HttpLib.HttpClient;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,8 +27,12 @@ namespace HttpLib
             Dictionary<string, string> parameters = null, Dictionary<string, string> headers = null, string content = null,
             Dictionary<string, string> formDataStrDic = null, Dictionary<string, string> formDataFileDic = null, CancellationTokenSource cts = null,bool isStream = false)
         {
-            //string absoluteUri = new Uri("http://175.24.61.38:8080").AbsoluteUri + relativeUri.TrimStart('/');
-            string absoluteUri = new Uri("http://192.168.1.7:8080").AbsoluteUri + relativeUri.TrimStart('/');
+#if DEBUG
+            const string BaseUrl = "http://192.168.1.7:8080";
+#else
+            const string BaseUrl = "http://175.24.61.38:8080";
+#endif
+            string absoluteUri = new Uri(BaseUrl).AbsoluteUri + relativeUri.TrimStart('/');
 
             HttpResult httpResult = new HttpResult();
 

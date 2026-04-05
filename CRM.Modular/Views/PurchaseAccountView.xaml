@@ -42,8 +42,7 @@
                     Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <Button x:Name="Delete" Width="80" Height="35" Content="删除" Margin="12,0,0,0"
                     Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            <Button x:Name="RefreshBalance" Width="100" Height="35" Content="刷新余额" Margin="12,0,0,0"
-                    Foreground="White" Background="#D32F2F" BorderThickness="0"/>
+            <Button x:Name="RefreshBalance" Width="100" Height="35" Content="刷新余额" Margin="12,0,0,0"/>
         </StackPanel>
 
         <DataGrid x:Name="AccountLst"
