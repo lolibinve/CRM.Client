@@ -94,6 +94,24 @@ namespace CRM.Modular.ViewModels
             }
         }
 
+        /// <summary>调用 <c>crm/login/taskStockManageSummary</c> 触发备货汇总库存更新，成功后刷新当前页。</summary>
+        public async void UpdateStockSummary()
+        {
+            IsProgressIndeterminate = true;
+            try
+            {
+                var ok = await CRMRequest.TaskStockManageSummary();
+                if (ok)
+                {
+                    await QueryBase(PageInfo?.PageNum ?? 1);
+                }
+            }
+            finally
+            {
+                IsProgressIndeterminate = false;
+            }
+        }
+
         public async void Delete()
         {
             var checkedItem = RecordLst?.FirstOrDefault(x => x.IsCheck);

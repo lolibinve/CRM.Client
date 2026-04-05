@@ -11,12 +11,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace CRM.Modular.ViewModels
 {
     /// <summary>
-    /// FBM 采购列表：筛选、分页、对接 <c>fbmList</c>。
+    /// FBM 采购列表：筛选、分页、对接 <c>fbmList</c>；不提供行内修改（仅新增/删除）。
     /// </summary>
     [AddINotifyPropertyChangedInterface]
     public class FbmPurchaseViewModel : Screen
@@ -54,13 +53,15 @@ namespace CRM.Modular.ViewModels
 
         private async Task InitAsync()
         {
-            await InitRoleSource();
-            await InitAccountFilter();
+            await RefreshRoleSourceAsync(resetSelection: true);
+            await RefreshAccountFilterAsync(resetSelection: true);
             await QueryBase(1);
         }
 
-        private async Task InitRoleSource()
+        /// <summary>从接口刷新业务员下拉；<paramref name="resetSelection"/> 为 false 时尽量保留当前选中项（仍存在列表中则不变）。</summary>
+        private async Task RefreshRoleSourceAsync(bool resetSelection)
         {
+            var previousName = SelectRole?.Name;
             var rm = await CRMRequest.RoleList(null);
             RoleSource = new ObservableCollection<RoleData>();
             RoleSource.Add(new RoleData { Name = "全部" });
@@ -74,6 +75,13 @@ namespace CRM.Modular.ViewModels
 
             var info = IoC.Get<CacheInfo>();
             IsAdmin = info.IsAdmin;
+
+            if (!resetSelection && !string.IsNullOrEmpty(previousName) && RoleSource.Any(x => x.Name == previousName))
+            {
+                SelectRole = RoleSource.First(x => x.Name == previousName);
+                return;
+            }
+
             if (!IsAdmin)
             {
                 SelectRole = RoleSource.FirstOrDefault(x => x.Name == info.LoginAccount)
@@ -85,8 +93,10 @@ namespace CRM.Modular.ViewModels
             }
         }
 
-        private async Task InitAccountFilter()
+        /// <summary>从接口刷新采购账号下拉；<paramref name="resetSelection"/> 为 false 时若原选项仍在列表中则保留。</summary>
+        private async Task RefreshAccountFilterAsync(bool resetSelection)
         {
+            var previous = SelectedFilterAccount;
             AccountFilterList = new ObservableCollection<string>();
             AccountFilterList.Add("全部");
             var acc = await CRMRequest.PurchaseAccountList(1, 2000);
@@ -98,11 +108,20 @@ namespace CRM.Modular.ViewModels
                 }
             }
 
-            SelectedFilterAccount = "全部";
+            if (!resetSelection && !string.IsNullOrWhiteSpace(previous) && AccountFilterList.Contains(previous))
+            {
+                SelectedFilterAccount = previous;
+            }
+            else
+            {
+                SelectedFilterAccount = "全部";
+            }
         }
 
         public async void Query()
         {
+            await RefreshRoleSourceAsync(resetSelection: false);
+            await RefreshAccountFilterAsync(resetSelection: false);
             await QueryBase(1);
         }
 
@@ -237,21 +256,6 @@ namespace CRM.Modular.ViewModels
                         item.IsCheck = false;
                     }
                 }
-            }
-        }
-
-        public async void Record_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (SelectItem == null)
-            {
-                return;
-            }
-
-            var vm = new AddFbmPurchaseViewModel(SelectItem, true);
-            var ok = await windowManager.ShowDialogAsync(vm);
-            if (ok == true)
-            {
-                await QueryBase(PageInfo?.PageNum ?? 1);
             }
         }
     }

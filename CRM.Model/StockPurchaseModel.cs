@@ -7,6 +7,24 @@ using System.Runtime.Serialization;
 namespace CRM.Model
 {
     /// <summary>
+    /// 备货货件状态：与 <c>stockList</c> 筛选参数 <c>type</c>、行字段 <c>type</c>、<c>stockEdit</c> 提交一致（0～3）。
+    /// </summary>
+    public enum StockShipmentStatus
+    {
+        /// <summary>采购运输中 / 运输中</summary>
+        InTransit = 0,
+
+        /// <summary>货件到仓 / 到仓库存</summary>
+        ArrivedWarehouse = 1,
+
+        /// <summary>滞销库存</summary>
+        Deadstock = 2,
+
+        /// <summary>售罄库存</summary>
+        SoldOut = 3,
+    }
+
+    /// <summary>
     /// 备货采购（备货流水）分页结果，对应 <c>stockList</c> 的 data。
     /// </summary>
     [DataContract]
@@ -16,13 +34,38 @@ namespace CRM.Model
         [DataMember(Name = "count")]
         public int Count { get; set; }
 
+        /// <summary>采购运输库存条数（与界面「采购运输库存」角标一致）。</summary>
+        [DataMember(Name = "intransCount")]
+        public int IntransCount { get; set; }
+
+        /// <summary>到仓库存条数。</summary>
+        [DataMember(Name = "instockCount")]
+        public int InstockCount { get; set; }
+
+        /// <summary>滞销库存条数。</summary>
+        [DataMember(Name = "unsaleableCount")]
+        public int UnsaleableCount { get; set; }
+
+        /// <summary>售罄库存条数。</summary>
+        [DataMember(Name = "outsaleCount")]
+        public int OutsaleCount { get; set; }
+
         [DataMember(Name = "list")]
         public List<StockPurchaseRecordModel> List { get; set; }
     }
 
+    /// <summary><c>stockStalePurIdList</c> 返回数据：滞留剩余库存采购批次列表。</summary>
+    [DataContract]
+    [AddINotifyPropertyChangedInterface]
+    public class StockStalePurIdListModel
+    {
+        [DataMember(Name = "list")]
+        public List<string> List { get; set; }
+    }
+
     /// <summary>
     /// 备货流水记录；对接 <c>stockEdit</c> / <c>stockList</c> 列表行。
-    /// 列表必填参数 <c>type</c> 与货件状态一致时常用：1 采购运输中，2 货件到仓（若与后端枚举不一致请改 <see cref="StockPurchaseConstants"/>）。
+    /// 货件状态统一：见 <see cref="StockShipmentStatus"/>。
     /// </summary>
     [DataContract]
     [AddINotifyPropertyChangedInterface]
@@ -54,24 +97,36 @@ namespace CRM.Model
         [DataMember(Name = "quantity")]
         public int Quantity { get; set; }
 
-        /// <summary>采购金额（接口为整型，单位与后端一致，一般为元）。</summary>
+        /// <summary>采购金额（接口为「元」；与后端约定为整数元或小数元均可反序列化）。</summary>
         [DataMember(Name = "expense")]
         public int Expense { get; set; }
 
+        /// <summary>单件采购成本（仅采购金额均摊）；接口 <c>unitValue</c>，单位为 <b>元</b>（可含小数）。</summary>
         [DataMember(Name = "unitValue")]
-        public int UnitValue { get; set; }
+        public decimal UnitValue { get; set; }
 
+        /// <summary>单件合计成本（采购+头程均摊）；接口 <c>unitCost</c>，单位为 <b>元</b>。</summary>
         [DataMember(Name = "unitCost")]
-        public int UnitCost { get; set; }
+        public decimal UnitCost { get; set; }
+
+        /// <summary>剩余库存；<c>stockList</c> / <c>stockInfoByPurId</c> 的 <c>StockRecord</c> 字段（见 PurchaseController 文档 §7、§14）。</summary>
+        [DataMember(Name = "stayQuantity")]
+        public int StayQuantity { get; set; }
 
         [DataMember(Name = "payment")]
         public int Payment { get; set; }
 
+        /// <summary>头程运费总额（接口整型，单位为「元」整数）。</summary>
         [DataMember(Name = "transFee")]
         public int TransFee { get; set; }
 
+        /// <summary>单件头程运费；接口 <c>unitTransFee</c>，单位为 <b>元</b>。</summary>
         [DataMember(Name = "unitTransFee")]
-        public int UnitTransFee { get; set; }
+        public decimal UnitTransFee { get; set; }
+
+        /// <summary>单件头程运费；列表接口 <c>unitFee</c>，单位为 <b>元</b>。</summary>
+        [DataMember(Name = "unitFee")]
+        public decimal UnitFee { get; set; }
 
         [DataMember(Name = "userName")]
         public string UserName { get; set; }
@@ -80,9 +135,13 @@ namespace CRM.Model
         [DataMember(Name = "purchaseAccount")]
         public string PurchaseAccount { get; set; }
 
-        /// <summary>货件状态：<see cref="StockPurchaseConstants.ShipmentInTransit"/> / <see cref="StockPurchaseConstants.ShipmentArrived"/>。</summary>
+        /// <summary>货件状态：<see cref="StockShipmentStatus"/>。</summary>
         [DataMember(Name = "type")]
         public int ShipmentType { get; set; }
+
+        /// <summary>原货件状态，接口字段 <c>typeOld</c>。</summary>
+        [DataMember(Name = "typeOld")]
+        public int? ShipmentTypeOld { get; set; }
 
         private DateTime? _instockDateTime;
 
@@ -111,41 +170,89 @@ namespace CRM.Model
                     return;
                 }
 
-                if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var a))
-                    _instockDateTime = a.Date;
-                else if (DateTime.TryParse(value, out var b))
-                    _instockDateTime = b.Date;
-                else
+                // 接口定义：instockTime 仅返回时间戳（Unix 秒/毫秒）。
+                if (!long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var unix))
+                {
                     _instockDateTime = null;
+                    return;
+                }
+
+                if (unix == 0)
+                {
+                    _instockDateTime = null;
+                    return;
+                }
+
+                _instockDateTime = unix > 1_000_000_000_000L
+                    ? DateTimeOffset.FromUnixTimeMilliseconds(unix).LocalDateTime.Date
+                    : DateTimeOffset.FromUnixTimeSeconds(unix).LocalDateTime.Date;
             }
         }
 
         [DataMember(Name = "remark")]
         public string Remark { get; set; }
 
+        [DataMember(Name = "isDel")]
+        public int IsDel { get; set; }
+
+        /// <summary>编辑页：单件采购成本，与 <see cref="RecalculateUnitFieldsForSave"/> 中 <see cref="UnitValue"/> 一致（元）。</summary>
         [IgnoreDataMember]
         [DependsOn(nameof(Expense), nameof(Quantity))]
         public string UnitPurchaseCostDisplay =>
-            Quantity > 0 ? (Expense / (double)Quantity).ToString("F2", CultureInfo.InvariantCulture) : "-";
+            Quantity > 0 ? FormatYuanDecimal(PerUnitYuanFromTotalYuan(Expense, Quantity)) : "-";
 
+        /// <summary>编辑页：单件头程，与 <see cref="UnitTransFee"/> 一致。</summary>
         [IgnoreDataMember]
         [DependsOn(nameof(TransFee), nameof(Quantity))]
         public string UnitTransFeeDisplay =>
-            Quantity > 0 ? (TransFee / (double)Quantity).ToString("F2", CultureInfo.InvariantCulture) : "-";
+            Quantity > 0 ? FormatYuanDecimal(PerUnitYuanFromTotalYuan(TransFee, Quantity)) : "-";
 
+        /// <summary>编辑页：单件合计成本，与 <see cref="UnitCost"/> 一致（采购+头程总额一次均分）。</summary>
         [IgnoreDataMember]
         [DependsOn(nameof(Expense), nameof(Quantity), nameof(TransFee))]
-        public string TotalUnitCostDisplay
-        {
-            get
-            {
-                if (Quantity <= 0)
-                    return "-";
-                var u1 = Expense / (double)Quantity;
-                var u2 = TransFee / (double)Quantity;
-                return (u1 + u2).ToString("F2", CultureInfo.InvariantCulture);
-            }
-        }
+        public string TotalUnitCostDisplay =>
+            Quantity > 0 ? FormatYuanDecimal(PerUnitTotalYuanFromPurchaseAndTrans(Expense, TransFee, Quantity)) : "-";
+
+        /// <summary>列表页：单件采购成本，仅展示接口 <c>unitValue</c>（元）。</summary>
+        [IgnoreDataMember]
+        [DependsOn(nameof(UnitValue))]
+        public string ListUnitPurchaseCostDisplay => FormatYuanDecimal(UnitValue);
+
+        /// <summary>列表页：单件头程运费，展示接口 <c>unitTransFee</c>（<c>stockList</c> 行字段）。</summary>
+        [IgnoreDataMember]
+        [DependsOn(nameof(UnitTransFee))]
+        public string ListUnitTransFeeDisplay => FormatYuanDecimal(UnitTransFee);
+
+        /// <summary>列表页：合计成本(单件)，仅展示接口 <c>unitCost</c>。</summary>
+        [IgnoreDataMember]
+        [DependsOn(nameof(UnitCost))]
+        public string ListTotalUnitCostDisplay => FormatYuanDecimal(UnitCost);
+
+        /// <summary>列表：采购金额（元）两位小数，与接口「元」整型一致。</summary>
+        [IgnoreDataMember]
+        [DependsOn(nameof(Expense))]
+        public string ExpenseYuanDisplay => FormatYuanInteger(Expense);
+
+        /// <summary>列表：头程运费总额（元）两位小数。</summary>
+        [IgnoreDataMember]
+        [DependsOn(nameof(TransFee))]
+        public string TransFeeYuanDisplay => FormatYuanInteger(TransFee);
+
+        /// <summary>将「元」格式化为两位小数展示。</summary>
+        private static string FormatYuanDecimal(decimal yuan) =>
+            yuan.ToString("F2", CultureInfo.InvariantCulture);
+
+        /// <summary>将「元」整型格式化为两位小数（总额类字段）。</summary>
+        private static string FormatYuanInteger(int yuan) =>
+            yuan.ToString("F2", CultureInfo.InvariantCulture);
+
+        /// <summary>总「元」整数按数量摊成单件「元」，与 <see cref="RecalculateUnitFieldsForSave"/> 一致。</summary>
+        private static decimal PerUnitYuanFromTotalYuan(int totalYuan, int quantity) =>
+            quantity <= 0 ? 0m : Math.Round((decimal)totalYuan / quantity, 2, MidpointRounding.AwayFromZero);
+
+        /// <summary>采购+头程总「元」按数量摊成单件合计「元」。</summary>
+        private static decimal PerUnitTotalYuanFromPurchaseAndTrans(int expenseYuan, int transFeeYuan, int quantity) =>
+            quantity <= 0 ? 0m : Math.Round(((decimal)expenseYuan + transFeeYuan) / quantity, 2, MidpointRounding.AwayFromZero);
 
         [IgnoreDataMember]
         [DependsOn(nameof(ShipmentType))]
@@ -153,18 +260,28 @@ namespace CRM.Model
         {
             get
             {
-                if (ShipmentType == StockPurchaseConstants.StockListDeadstock)
-                    return "滞销库存";
-                if (ShipmentType == StockPurchaseConstants.ShipmentArrived)
-                    return "货件到仓";
-                return "采购运输中";
+                if (!Enum.IsDefined(typeof(StockShipmentStatus), ShipmentType))
+                    return ShipmentType.ToString(CultureInfo.InvariantCulture);
+                switch ((StockShipmentStatus)ShipmentType)
+                {
+                    case StockShipmentStatus.InTransit:
+                        return "采购运输中";
+                    case StockShipmentStatus.ArrivedWarehouse:
+                        return "货件到仓";
+                    case StockShipmentStatus.Deadstock:
+                        return "滞销库存";
+                    case StockShipmentStatus.SoldOut:
+                        return "售罄库存";
+                    default:
+                        return ShipmentType.ToString(CultureInfo.InvariantCulture);
+                }
             }
         }
 
         [IgnoreDataMember]
         [DependsOn(nameof(Payment))]
         public string PaymentDisplay =>
-            Payment == 2 ? "诚意赊" : (Payment == 1 ? "账期" : "现金支付");
+            Payment == 0 ? "现金支付" : (Payment == 1 || Payment == 2) ? "诚意赊" : Payment.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>根据接口字段 <c>addTime</c>（<see cref="AddTimeToken"/>）填充界面用 <see cref="PurchaseDate"/>；列表/编辑打开时应调用。</summary>
         public void SyncPurchaseDateFromAddTime()
@@ -172,20 +289,25 @@ namespace CRM.Model
             PurchaseDate = ParseAddTime(AddTimeToken);
         }
 
-        /// <summary>保存前根据金额与数量写入 <c>unitValue</c> / <c>unitCost</c> / <c>unitTransFee</c>（均分，取整）。</summary>
+        /// <summary>
+        /// 保存前根据金额与数量写入 <c>unitValue</c> / <c>unitCost</c> / <c>unitTransFee</c> / <c>unitFee</c>。
+        /// 单件字段均为 <b>元</b>（两位小数），与 <see cref="UnitPurchaseCostDisplay"/> 等展示及 <c>stockEdit</c> 传参一致。
+        /// </summary>
         public void RecalculateUnitFieldsForSave()
         {
             if (Quantity <= 0)
             {
-                UnitCost = 0;
-                UnitTransFee = 0;
-                UnitValue = 0;
+                UnitCost = 0m;
+                UnitTransFee = 0m;
+                UnitValue = 0m;
+                UnitFee = 0m;
                 return;
             }
 
-            UnitCost = (int)Math.Round(Expense / (double)Quantity);
-            UnitTransFee = (int)Math.Round(TransFee / (double)Quantity);
-            UnitValue = UnitCost;
+            UnitValue = PerUnitYuanFromTotalYuan(Expense, Quantity);
+            UnitTransFee = PerUnitYuanFromTotalYuan(TransFee, Quantity);
+            UnitFee = UnitTransFee;
+            UnitCost = PerUnitTotalYuanFromPurchaseAndTrans(Expense, TransFee, Quantity);
         }
 
         private static DateTime? ParseAddTime(object token)
@@ -226,28 +348,13 @@ namespace CRM.Model
         }
     }
 
-    /// <summary>与后端约定的备货流水 <c>type</c> 及支付方式常量（若接口变更只改此处）。</summary>
+    /// <summary>与后端约定的备货流水支付方式（<c>stockEdit</c> 参数 <c>payment</c>；货件状态见 <see cref="StockShipmentStatus"/>）。</summary>
     public static class StockPurchaseConstants
     {
-        /// <summary><c>stockList</c> 筛选：模块2 采购运输库存（与行内货件「运输中」一致时常用值 1）。</summary>
-        public const int StockListInTransit = 1;
-
-        /// <summary><c>stockList</c> 筛选：模块3 到仓库库存。</summary>
-        public const int StockListArrivedWarehouse = 2;
-
-        /// <summary><c>stockList</c> 筛选：模块4 滞销库存（到仓满 60 天等由后端处理）。</summary>
-        public const int StockListDeadstock = 3;
-
-        /// <summary><c>stockList</c> 筛选：模块5 售罄库存（数量归零等由后端处理）；<c>type</c> 需与后端约定一致。</summary>
-        public const int StockListSoldOut = 4;
-
-        /// <summary>行数据：货件状态「采购运输中」。</summary>
-        public const int ShipmentInTransit = 1;
-
-        /// <summary>行数据：货件状态「货件到仓」。</summary>
-        public const int ShipmentArrived = 2;
-
+        /// <summary>现金支付</summary>
         public const int PaymentCash = 0;
-        public const int PaymentCredit = 2;
+
+        /// <summary>诚意赊（历史数据可能为 <c>2</c>，列表展示仍作诚意赊）</summary>
+        public const int PaymentCredit = 1;
     }
 }

@@ -58,31 +58,38 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="采购批次:"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="采购批次:"
+                           Visibility="{Binding ShowPurIdRow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="4"
                          Text="{Binding Record.PurId, Mode=TwoWay}"
                          IsReadOnly="True"
-                         ToolTip="新增保存后由后端生成；仅展示。"/>
+                         ToolTip="新增保存后由后端生成；仅展示。"
+                         Visibility="{Binding ShowPurIdRow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="采购时间:"/>
                 <DatePicker Grid.Row="1" Grid.Column="1" SelectedDateFormat="Short"
-                            SelectedDate="{Binding Record.PurchaseDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            SelectedDate="{Binding Record.PurchaseDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            IsEnabled="{Binding CanEditBaseFields}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="3" Text="业务员:"/>
-                <TextBox Grid.Row="1" Grid.Column="4" Text="{Binding Record.UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="1" Grid.Column="4"
+                         Text="{Binding Record.UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         IsReadOnly="{Binding IsBaseFieldsReadOnly}"/>
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="采购账号:"/>
                 <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" Margin="10,4,0,4"
                           ItemsSource="{Binding AccountOptions}"
                           SelectedItem="{Binding Record.PurchaseAccount, Mode=TwoWay}"
-                          IsEditable="False"/>
+                          IsEditable="False"
+                          IsEnabled="{Binding CanEditBaseFields}"/>
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="产品编码:"/>
                 <ComboBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="4" Margin="10,4,0,4"
                           ItemsSource="{Binding ProductOptions}"
                           DisplayMemberPath="ProductCode"
                           SelectedItem="{Binding SelectedProduct, Mode=TwoWay}"
-                          IsEditable="False"/>
+                          IsEditable="False"
+                          IsEnabled="{Binding CanEditBaseFields}"/>
 
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="产品名称:"/>
                 <TextBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="4"
@@ -91,11 +98,13 @@
 
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="采购金额:"/>
                 <TextBox Grid.Row="5" Grid.Column="1"
-                         Text="{Binding Record.Expense, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                         Text="{Binding Record.Expense, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         IsEnabled="{Binding CanEditBaseFields}"/>
 
                 <TextBlock Grid.Row="5" Grid.Column="3" Text="采购数量:"/>
                 <TextBox Grid.Row="5" Grid.Column="4"
-                         Text="{Binding Record.Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                         Text="{Binding Record.Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         IsEnabled="{Binding CanEditBaseFields}"/>
 
                 <TextBlock Grid.Row="6" Grid.Column="0" Text="头程运费:"/>
                 <TextBox Grid.Row="6" Grid.Column="1"
@@ -103,7 +112,7 @@
 
                 <TextBlock Grid.Row="6" Grid.Column="3" VerticalAlignment="Top" Margin="0,10,0,0" Text="说明:"/>
                 <TextBlock Grid.Row="6" Grid.Column="4" TextWrapping="Wrap" Foreground="#888" VerticalAlignment="Top" Margin="10,6,0,0"
-                           Text="单件采购成本、单件头程、合计成本按金额÷数量均分；保存时写入接口。货件到仓时须填写头程运费。"/>
+                           Text="采购金额、头程运费为「元」；单件三项与保存时 unit 字段一致（元，两位小数）。货件到仓时须填写头程运费。"/>
 
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="单件采购成本:"/>
                 <TextBlock Grid.Row="7" Grid.Column="1" Margin="10,4,0,4" Foreground="#333" HorizontalAlignment="Left"
@@ -121,7 +130,8 @@
                 <ComboBox Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="4" Margin="10,4,0,4"
                           ItemsSource="{Binding PaymentItems}"
                           DisplayMemberPath="Display"
-                          SelectedItem="{Binding SelectedPayment, Mode=TwoWay}"/>
+                          SelectedItem="{Binding SelectedPayment, Mode=TwoWay}"
+                          IsEnabled="{Binding CanEditBaseFields}"/>
 
                 <TextBlock Grid.Row="10" Grid.Column="0" Text="货件状态:"/>
                 <ComboBox Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="4" Margin="10,4,0,4"

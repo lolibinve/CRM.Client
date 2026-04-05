@@ -66,8 +66,7 @@
                   IsReadOnly="True"
                   SelectionMode="Single"
                   SelectedItem="{Binding SelectItem}"
-                  VerticalAlignment="Stretch"
-                  cm:Message.Attach="[Event MouseDoubleClick] = [Action Record_MouseDoubleClick($source,$eventArgs)]">
+                  VerticalAlignment="Stretch">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="选中" Width="56" IsReadOnly="False">
                     <DataGridTemplateColumn.CellTemplate>

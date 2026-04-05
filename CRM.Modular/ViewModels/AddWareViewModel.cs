@@ -1,24 +1,13 @@
 ﻿using Caliburn.Micro;
 using PropertyChanged;
-using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using CRM.Model;
 using HttpLib;
 using CRM.Modular.Models;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
-using System.Diagnostics;
 using System.Collections.ObjectModel;
-using System.Windows.Documents;
-using System.Runtime.InteropServices;
-using System.Net.Sockets;
-using CRM.Modular.Views;
-using static OfficeOpenXml.FormulaParsing.EpplusExcelDataProvider;
-using MaterialDesignThemes.Wpf;
-using System.Xml.Linq;
 using System.Text.RegularExpressions;
 
 namespace CRM.Modular.ViewModels

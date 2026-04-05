@@ -13,34 +13,10 @@ namespace CRM.Modular.ViewModels
     {
         public ProcurementAccountLstModel Account { get; set; } = new ProcurementAccountLstModel();
         public string Title { get; set; }
+        public bool WasSuccessful { get; private set; }
 
-        /// <summary>资金类型：现金存入 = 0。</summary>
-        public bool IsCashType
-        {
-            get => Account.AccountType == 0;
-            set
-            {
-                if (value)
-                {
-                    Account.AccountType = 0;
-                    RefreshFundTypeUi();
-                }
-            }
-        }
-
-        /// <summary>资金类型：账期/诚意赊 = 1。</summary>
-        public bool IsCreditType
-        {
-            get => Account.AccountType == 1;
-            set
-            {
-                if (value)
-                {
-                    Account.AccountType = 1;
-                    RefreshFundTypeUi();
-                }
-            }
-        }
+        /// <summary>编辑时若现金余额或账期/诚意赊余额任一非 0，则采购账号名称只读。</summary>
+        public bool IsAccountNameReadOnly { get; private set; }
 
         public AddPurchaseAccountViewModel(ProcurementAccountLstModel data, bool isModify = false)
         {
@@ -52,25 +28,14 @@ namespace CRM.Modular.ViewModels
             else
             {
                 Account.Date = System.DateTime.Now.Date;
-                Account.AccountType = 0;
             }
 
-            NormalizeFundType();
-            RefreshFundTypeUi();
-        }
-
-        private void NormalizeFundType()
-        {
-            if (Account.AccountType != 0 && Account.AccountType != 1)
+            if (isModify)
             {
-                Account.AccountType = 0;
+                var cash = Account.BalanceCash ?? 0;
+                var debt = Account.BalanceDebt ?? 0;
+                IsAccountNameReadOnly = cash != 0 || debt != 0;
             }
-        }
-
-        private void RefreshFundTypeUi()
-        {
-            NotifyOfPropertyChange(nameof(IsCashType));
-            NotifyOfPropertyChange(nameof(IsCreditType));
         }
 
         public async void Sure()
@@ -92,6 +57,8 @@ namespace CRM.Modular.ViewModels
             {
                 return;
             }
+
+            WasSuccessful = true;
 
             var temp = GetView();
             if (temp is Window win)
@@ -116,10 +83,8 @@ namespace CRM.Modular.ViewModels
         {
             target.Id = source.Id;
             target.AddTimeToken = source.AddTimeToken;
-            target.Amount = source.Amount;
             target.NameRaw = source.NameRaw;
             target.ProcurementAccountRaw = source.ProcurementAccountRaw;
-            target.AccountType = source.AccountType;
             target.Remark = source.Remark;
             target.BalanceCash = source.BalanceCash;
             target.BalanceDebt = source.BalanceDebt;

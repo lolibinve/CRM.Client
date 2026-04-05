@@ -1,15 +1,17 @@
-﻿<Window x:Class="CRM.Modular.Views.AddOrderView"
+<Window x:Class="CRM.Modular.Views.AddOrderView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CRM.Modular.Views"
+        xmlns:cm="http://caliburnmicro.com"
         Language="zh-CN"
         mc:Ignorable="d" 
-        Title="{Binding Title}" Height="500" Width="600" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow">
+        Title="{Binding Title}" Height="620" Width="620" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow">
 
     <Window.Resources>
         <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}">
                 <Setter Property="Height" Value="50"></Setter>
                 <Setter Property="Margin" Value="10,0,0,0"></Setter>
@@ -19,7 +21,7 @@
             </Style>
             <Style TargetType="TextBlock">
                 <Setter Property="VerticalAlignment" Value="Center"></Setter>
-                <Setter Property="HorizontalAlignment" Value="Right"></Setter>
+                <Setter Property="HorizontalAlignment" Value="Left"></Setter>
                 <Setter Property="Foreground" Value="#A7A7A7"></Setter>
             </Style> 
             <ResourceDictionary.MergedDictionaries>
@@ -48,6 +50,10 @@
             <RowDefinition/>
             <RowDefinition/>
             <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="40"/>
             <RowDefinition Height="60"/>
         </Grid.RowDefinitions>
@@ -57,7 +63,6 @@
 
         <TextBlock Text="日期:" Grid.Row="1"/>
         <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding order.SaleDate,StringFormat='{}{0:yyyy-MM-dd}'}"/>
-        <!--<DatePicker Grid.Column="1" Grid.Row="1" SelectedDate="{Binding order.SaleDate,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Width="120" SelectedDateFormat="Long"/>-->
 
         <TextBlock Text="订单号:" Grid.Row="2"/>
         <TextBox Grid.Column="1" Grid.Row="2" Text="{Binding order.OrderNumber}" IsReadOnly="True"/>
@@ -83,36 +88,69 @@
         <TextBlock Text="销售额:" Grid.Row="0"  Grid.Column="3"/>
         <TextBox Grid.Column="4" Grid.Row="0" Text="{Binding order.SalesVolume,StringFormat={}{0:F2}}" IsReadOnly="True"/>
 
-        <TextBlock Text="成本（¥）:" Grid.Row="1"  Grid.Column="3" />
-        <TextBox Grid.Column="4" Grid.Row="1" Text="{Binding order.Cost}" IsEnabled="{Binding CostIsEnable}" VerticalAlignment="Center" Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}" />
+        <TextBlock Text="采购方式:" Grid.Row="1"  Grid.Column="3" />
+        <ComboBox Grid.Column="4" Grid.Row="1" Margin="10,0,0,4" 
+                  VerticalAlignment="Center"
+                  ItemsSource="{Binding PurchaseMethodItems}"
+                  DisplayMemberPath="Display"
+                  SelectedItem="{Binding SelectedPurchaseMethod, Mode=TwoWay}"
+                  IsEnabled="{Binding CanEditStockPurchaseFields}"
+                  cm:Message.Attach="[Event SelectionChanged] = [Action RefreshPurchaseMethodLogic]"/>
 
-        <TextBlock Text="运费（¥）:" Grid.Row="2"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="2" Text="{Binding order.TransExpense}" IsEnabled="{Binding TransExpenseIsEnable}" VerticalAlignment="Center"  Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}"/>
+        <TextBlock Text="成本（¥）:" Grid.Row="2"  Grid.Column="3" />
+        <TextBox Grid.Column="4" Grid.Row="2" Text="{Binding order.Cost}" IsReadOnly="True" VerticalAlignment="Center" Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}" />
 
-        <TextBlock Text="退款（¥）:" Grid.Row="3"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="3" Text="{Binding order.BackAmount}" VerticalAlignment="Center"  Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}"/>
+        <TextBlock Text="运费（¥）:" Grid.Row="3"  Grid.Column="3"/>
+        <TextBox Grid.Column="4" Grid.Row="3" Text="{Binding order.TransExpense}" IsEnabled="{Binding TransExpenseIsEnable}" VerticalAlignment="Center"  Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}"/>
 
-        <TextBlock Text="利润（¥）:" Grid.Row="4"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="4" Text="{Binding order.Profit,StringFormat={}{0:F2}}" IsReadOnly="True"/>
+        <TextBlock Text="退款（¥）:" Grid.Row="4"  Grid.Column="3"/>
+        <TextBox Grid.Column="4" Grid.Row="4" Text="{Binding order.BackAmount}" VerticalAlignment="Center"  Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}"/>
 
-        <TextBlock Text="利润率:" Grid.Row="5"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="5" Text="{Binding order.ProfitRate}" IsReadOnly="True"/>
+        <TextBlock Text="利润（¥）:" Grid.Row="5"  Grid.Column="3"/>
+        <TextBox Grid.Column="4" Grid.Row="5" Text="{Binding order.Profit,StringFormat={}{0:F2}}" IsReadOnly="True"/>
 
-        <TextBlock Text="购买人:" Grid.Row="6"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="6" Text="{Binding order.Buyer}" IsReadOnly="True"/>
+        <TextBlock Text="利润率:" Grid.Row="6"  Grid.Column="3"/>
+        <TextBox Grid.Column="4" Grid.Row="6" Text="{Binding order.ProfitRate}" IsReadOnly="True"/>
 
-        <TextBlock Text="购买人电话:" Grid.Row="7"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="7" Text="{Binding order.Phone}" IsReadOnly="True"/>
+        <TextBlock Text="购买人:" Grid.Row="7"  Grid.Column="3"/>
+        <TextBox Grid.Column="4" Grid.Row="7" Text="{Binding order.Buyer}" IsReadOnly="True"/>
 
-        <TextBlock Text="购买数量:" Grid.Row="8"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="8" Text="{Binding order.QuantityPurchased}" IsReadOnly="True"/>
+        <TextBlock Text="购买人电话:" Grid.Row="8"  Grid.Column="3"/>
+        <TextBox Grid.Column="4" Grid.Row="8" Text="{Binding order.Phone}" IsReadOnly="True"/>
 
+        <TextBlock Text="购买数量:" Grid.Row="9"  Grid.Column="3"/>
+        <TextBox Grid.Column="4" Grid.Row="9" Text="{Binding order.QuantityPurchased}" IsReadOnly="True"/>
 
-        <TextBlock Text="备注:" Grid.Row="9"  Margin="0,0,0,0"/>
-        <TextBox Grid.Column="1" Grid.Row="9" Text="{Binding order.Remark}"
+        <TextBlock Text="采购批次:" Grid.Row="10" Grid.Column="0"
+                   Visibility="{Binding ShowPurIdRow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <TextBox Grid.Column="1" Grid.Row="10" Grid.ColumnSpan="4"
+                 Text="{Binding order.PurId, UpdateSourceTrigger=PropertyChanged}"
+                 IsReadOnly="{Binding StockPurchaseLocked}"
+                 Visibility="{Binding ShowPurIdTextRow, Converter={StaticResource BooleanToVisibilityConverter}}"
+                 cm:Message.Attach="[Event LostFocus] = [Action OnPurIdLostFocus]"/>
+        <ComboBox Grid.Column="1" Grid.Row="10" Grid.ColumnSpan="4" Margin="10,4,0,4" Height="46" VerticalAlignment="Center"
+                  ItemsSource="{Binding DeadstockPurIdOptions}"
+                  SelectedItem="{Binding SelectedDeadstockPurId, Mode=TwoWay}"
+                  IsEnabled="{Binding CanEditStockPurchaseFields}"
+                  Visibility="{Binding ShowPurIdComboRow, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  cm:Message.Attach="[Event SelectionChanged] = [Action OnDeadstockPurIdChanged]"/>
+
+        <TextBlock Text="发货数量:" Grid.Row="11" Grid.Column="0"
+                   Visibility="{Binding ShowShipQtyRow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <TextBox Grid.Column="1" Grid.Row="11"
+                 Text="{Binding order.ShipQuantity, UpdateSourceTrigger=PropertyChanged}"
+                 IsReadOnly="{Binding StockPurchaseLocked}"
+                 Visibility="{Binding ShowShipQtyRow, Converter={StaticResource BooleanToVisibilityConverter}}"
+                 cm:Message.Attach="[Event LostFocus] = [Action OnShipQuantityLostFocus]"/>
+        <TextBlock Grid.Column="2" Grid.Row="11" Grid.ColumnSpan="3" Margin="8,0,0,0" Foreground="#888" FontSize="12"
+                   Text="{Binding StayQuantityHint}"
+                   Visibility="{Binding ShowShipQtyRow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+        <TextBlock Text="备注:" Grid.Row="12"  Margin="0,0,0,0"/>
+        <TextBox Grid.Column="1" Grid.Row="12" Text="{Binding order.Remark}"
                  AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Center" Padding="5"
                  Style="{StaticResource MaterialDesignFilledTextBox}"  Margin="7,0,0,0"  Grid.ColumnSpan="4"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="10" Grid.ColumnSpan="5">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="13" Grid.ColumnSpan="5">
             <Button Name="CloseForm" Content="取消" Height="35" Width="100" Style="{StaticResource MaterialDesignFlatLightBgButton}"/>
             <Button Name="Sure" Content="确认" Height="35" Width="100" Margin="50,0,0,0" Style="{StaticResource MaterialDesignFlatMidBgButton}"/>
         </StackPanel>

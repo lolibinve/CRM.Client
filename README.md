@@ -24,6 +24,14 @@ todo：完成其他接口之后
 
 
 前端对应后端接口如下：
+
+修改一下  
+PurchaseAccountViewModel、
+PurchaseAccountView
+AddPurchaseAccountView
+
+
+
 PurchaseAccount  采购账户管理 列表 accountList  新增修改 accountEdit
 FbmPurchase  FBM采购  列表  fbmList  新增修改  fbmEdit
 StockProduct  备货产品  列表    stockManageList      新增修改  stockManageEdit

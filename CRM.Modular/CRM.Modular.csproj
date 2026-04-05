@@ -114,6 +114,8 @@
     </Compile>
     <Compile Include="ViewModels\AddFbmPurchaseViewModel.cs" />
     <Compile Include="ViewModels\AddPurchaseAccountViewModel.cs" />
+    <Compile Include="ViewModels\PurchaseAccountCheckInViewModel.cs" />
+    <Compile Include="ViewModels\PurchaseAccountCheckInListViewModel.cs" />
     <Compile Include="ViewModels\AddRoleViewModel.cs" />
     <Compile Include="ViewModels\AddProductViewModel.cs" />
     <Compile Include="ViewModels\AddExchangeRateViewModel.cs" />
@@ -147,6 +149,12 @@
     </Compile>
     <Compile Include="Views\AddPurchaseAccountView.xaml.cs">
       <DependentUpon>AddPurchaseAccountView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PurchaseAccountCheckInView.xaml.cs">
+      <DependentUpon>PurchaseAccountCheckInView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PurchaseAccountCheckInListView.xaml.cs">
+      <DependentUpon>PurchaseAccountCheckInListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\AddProductView.xaml.cs">
       <DependentUpon>AddProductView.xaml</DependentUpon>
@@ -258,6 +266,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\AddPurchaseAccountView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PurchaseAccountCheckInView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PurchaseAccountCheckInListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -57,6 +57,8 @@ namespace CRM.Client
             container.PerRequest<StandardPriceViewModel>();
 
             container.PerRequest<AddPurchaseAccountViewModel>();
+            container.PerRequest<PurchaseAccountCheckInViewModel>();
+            container.PerRequest<PurchaseAccountCheckInListViewModel>();
             container.PerRequest<PurchaseAccountViewModel>();
 
             container.PerRequest<FbmPurchaseViewModel>();

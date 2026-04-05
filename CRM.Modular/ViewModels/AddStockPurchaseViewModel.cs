@@ -24,6 +24,8 @@ namespace CRM.Modular.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class AddStockPurchaseViewModel : Screen
     {
+        private readonly int? _originalShipmentType;
+
         public List<PaymentPickItem> PaymentItems { get; } = new List<PaymentPickItem>
         {
             new PaymentPickItem { Value = StockPurchaseConstants.PaymentCash, Display = "现金支付" },
@@ -34,8 +36,8 @@ namespace CRM.Modular.ViewModels
 
         public List<ShipmentPickItem> ShipmentItems { get; } = new List<ShipmentPickItem>
         {
-            new ShipmentPickItem { Value = StockPurchaseConstants.ShipmentInTransit, Display = "采购运输中" },
-            new ShipmentPickItem { Value = StockPurchaseConstants.ShipmentArrived, Display = "货件到仓" },
+            new ShipmentPickItem { Value = (int)StockShipmentStatus.InTransit, Display = "采购运输中" },
+            new ShipmentPickItem { Value = (int)StockShipmentStatus.ArrivedWarehouse, Display = "货件到仓" },
         };
 
         public ShipmentPickItem SelectedShipment { get; set; }
@@ -54,15 +56,26 @@ namespace CRM.Modular.ViewModels
 
         public bool IsModify { get; }
 
+        /// <summary>采购批次仅修改/查看时展示，新增不展示。</summary>
+        public bool ShowPurIdRow => IsModify;
+
         /// <summary>模块3、4 列表进入时为只读，不可保存。</summary>
         public bool IsViewOnly { get; }
 
         [DependsOn(nameof(IsViewOnly))]
         public bool CanEdit => !IsViewOnly;
 
+        /// <summary>仅新增可编辑：采购时间、业务员、采购账号、产品编码、采购金额、采购数量、支付方式。</summary>
+        [DependsOn(nameof(IsModify))]
+        // [DependsOn(nameof(IsViewOnly))]
+        public bool CanEditBaseFields => !IsModify && !IsViewOnly;
+
+        [DependsOn(nameof(CanEditBaseFields))]
+        public bool IsBaseFieldsReadOnly => !CanEditBaseFields;
+
         [DependsOn(nameof(SelectedShipment))]
         //[DependsOn(nameof(IsViewOnly))]
-        public bool IsInstockEnabled => !IsViewOnly && SelectedShipment?.Value == StockPurchaseConstants.ShipmentArrived;
+        public bool IsInstockEnabled => !IsViewOnly && SelectedShipment?.Value == (int)StockShipmentStatus.ArrivedWarehouse;
 
         public AddStockPurchaseViewModel(StockPurchaseRecordModel data, bool isModify, bool viewOnly = false)
         {
@@ -81,16 +94,21 @@ namespace CRM.Modular.ViewModels
             if (isModify && data != null)
             {
                 Record = Clone(data);
+                _originalShipmentType = Record.ShipmentType;
+                // 历史 payment=2 与现约定诚意赊=1 对齐，否则下拉无法匹配
+                if (Record.Payment == 2)
+                    Record.Payment = StockPurchaseConstants.PaymentCredit;
             }
             else
             {
                 Record = new StockPurchaseRecordModel
                 {
                     PurchaseDate = DateTime.Now.Date,
-                    ShipmentType = StockPurchaseConstants.ShipmentInTransit,
+                    ShipmentType = (int)StockShipmentStatus.InTransit,
                     Payment = StockPurchaseConstants.PaymentCash,
                     UserName = info?.LoginAccount ?? "",
                 };
+                _originalShipmentType = null;
             }
 
             SelectedPayment = PaymentItems.FirstOrDefault(p => p.Value == Record.Payment) ?? PaymentItems[0];
@@ -162,7 +180,7 @@ namespace CRM.Modular.ViewModels
             }
 
             Record.ShipmentType = SelectedShipment.Value;
-            if (SelectedShipment.Value == StockPurchaseConstants.ShipmentArrived)
+            if (SelectedShipment.Value == (int)StockShipmentStatus.ArrivedWarehouse)
             {
                 if (!Record.InstockDateTime.HasValue)
                     Record.InstockDateTime = DateTime.Now;
@@ -214,17 +232,24 @@ namespace CRM.Modular.ViewModels
                 Record.ShipmentType = SelectedShipment.Value;
             }
 
-            if (Record.ShipmentType == StockPurchaseConstants.ShipmentArrived && !Record.InstockDateTime.HasValue)
+            // 修改时按后端约定始终回传原状态到 typeOld（无论是否变更）。
+            Record.ShipmentTypeOld = null;
+            if (IsModify && _originalShipmentType.HasValue)
+            {
+                Record.ShipmentTypeOld = _originalShipmentType.Value;
+            }
+
+            if (Record.ShipmentType == (int)StockShipmentStatus.ArrivedWarehouse && !Record.InstockDateTime.HasValue)
             {
                 Record.InstockDateTime = DateTime.Now;
             }
 
-            if (Record.ShipmentType == StockPurchaseConstants.ShipmentInTransit)
+            if (Record.ShipmentType == (int)StockShipmentStatus.InTransit)
             {
                 Record.InstockDateTime = null;
             }
 
-            if (Record.ShipmentType == StockPurchaseConstants.ShipmentArrived && Record.TransFee <= 0)
+            if (Record.ShipmentType == (int)StockShipmentStatus.ArrivedWarehouse && Record.TransFee <= 0)
             {
                 MessageBox.Show("缺少运费");
                 return;
@@ -277,9 +302,11 @@ namespace CRM.Modular.ViewModels
                 Payment = s.Payment,
                 TransFee = s.TransFee,
                 UnitTransFee = s.UnitTransFee,
+                UnitFee = s.UnitFee,
                 UserName = s.UserName,
                 PurchaseAccount = s.PurchaseAccount,
                 ShipmentType = s.ShipmentType,
+                ShipmentTypeOld = s.ShipmentTypeOld,
                 InstockDateTime = s.InstockDateTime,
                 Remark = s.Remark,
             };

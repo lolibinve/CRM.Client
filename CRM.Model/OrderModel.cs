@@ -1,4 +1,4 @@
-﻿using OfficeOpenXml;
+using OfficeOpenXml;
 using PropertyChanged;
 using System;
 using System.Collections.Generic;
@@ -230,6 +230,18 @@ namespace CRM.Model
         [DataMember(Name = "quantityPurchased")]
         public string QuantityPurchased { get; set; }
 
+        /// <summary>采购方式，见 <see cref="OrderPurchaseMethod"/>（接口 <c>purchaseType</c>）。</summary>
+        [DataMember(Name = "purchaseType")]
+        public int PurchaseMethod { get; set; }
+
+        /// <summary>备货/滞销采购批次（方式 2、3 时填写）。</summary>
+        [DataMember(Name = "purchaseId")]
+        public string PurId { get; set; }
+
+        /// <summary>使用备货时的发货数量。</summary>
+        [DataMember(Name = "sendAmount")]
+        public int ShipQuantity { get; set; }
+
         [DataMemberAttribute(IsRequired = false)]
         public bool IsCheck { get; set; } = false;
 
@@ -262,12 +274,33 @@ namespace CRM.Model
             this.Buyer = data.Buyer;
             this.Phone = data.Phone;
             this.QuantityPurchased = data.QuantityPurchased;
+            this.PurchaseMethod = data.PurchaseMethod;
+            this.PurId = data.PurId;
+            this.ShipQuantity = data.ShipQuantity;
 
             this.IsImport = data.IsImport;
             this.IsImageUrl = data.IsImageUrl;
         }
     }
 
+    /// <summary>订单采购方式（接口 <c>purchaseType</c> / 请求参数 <c>purchaseMethod</c>）。</summary>
+    public enum OrderPurchaseMethod
+    {
+        /// <summary>未选择</summary>
+        Unselected = 0,
+
+        /// <summary>现金采购（FBM）</summary>
+        Cash = 1,
+
+        /// <summary>使用备货</summary>
+        Stock = 2,
+
+        /// <summary>滞留库存</summary>
+        Deadstock = 3,
+
+        /// <summary>退回重售（仅修改订单可选）</summary>
+        ResellReturn = 4,
+    }
 
     public enum OrderState
     {

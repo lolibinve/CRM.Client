@@ -34,9 +34,14 @@
             <TextBlock Text="采购批次:" Margin="0,0,8,0" VerticalAlignment="Center"/>
             <TextBox Width="160" Text="{Binding FilterPurId, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
             <TextBlock Text="业务员:" Margin="16,0,8,0" VerticalAlignment="Center"/>
-            <TextBox Width="120" Text="{Binding FilterBuyerName, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+            <ComboBox Width="140" VerticalAlignment="Center"
+                      ItemsSource="{Binding RoleSource}"
+                      DisplayMemberPath="Name"
+                      SelectedItem="{Binding SelectRole, Mode=TwoWay}"/>
             <TextBlock Text="产品编码:" Margin="16,0,8,0" VerticalAlignment="Center"/>
-            <TextBox Width="140" Text="{Binding FilterProductCode, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+            <ComboBox Width="160" VerticalAlignment="Center"
+                      ItemsSource="{Binding ProductCodeFilterList}"
+                      SelectedItem="{Binding SelectedProductCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
             <Button x:Name="Query" Width="88" Height="35" Content="查询" Margin="10,0,0,0"/>
             <Button x:Name="Add" Width="88" Height="35" Content="新增" Margin="10,0,0,0"/>
@@ -48,7 +53,7 @@
             <materialDesign:Badged Badge="{Binding StockViewBadge0}">
                 <RadioButton MinWidth="132" Height="35" Padding="8,0"
                             IsChecked="{Binding statusTransit}"
-                            cm:Message.Attach="[Event Click]= [Action StockTypeQuery(1)]"
+                            cm:Message.Attach="[Event Click]= [Action StockTypeQuery(0)]"
                             Content="采购运输库存"
                             Margin="0,0,0,0"
                             GroupName="stockPurchaseType"
@@ -57,7 +62,7 @@
             <materialDesign:Badged Badge="{Binding StockViewBadge1}">
                 <RadioButton MinWidth="132" Height="35" Padding="8,0"
                             IsChecked="{Binding statusWarehouse}"
-                            cm:Message.Attach="[Event Click]= [Action StockTypeQuery(2)]"
+                            cm:Message.Attach="[Event Click]= [Action StockTypeQuery(1)]"
                             Content="到仓库存"
                             Margin="8,0,0,0"
                             GroupName="stockPurchaseType"
@@ -66,7 +71,7 @@
             <materialDesign:Badged Badge="{Binding StockViewBadge2}">
                 <RadioButton MinWidth="132" Height="35" Padding="8,0"
                             IsChecked="{Binding statusDeadstock}"
-                            cm:Message.Attach="[Event Click]= [Action StockTypeQuery(3)]"
+                            cm:Message.Attach="[Event Click]= [Action StockTypeQuery(2)]"
                             Content="滞销库存"
                             Margin="8,0,0,0"
                             GroupName="stockPurchaseType"
@@ -75,7 +80,7 @@
             <materialDesign:Badged Badge="{Binding StockViewBadge3}">
                 <RadioButton MinWidth="132" Height="35" Padding="8,0"
                             IsChecked="{Binding statusSoldOut}"
-                            cm:Message.Attach="[Event Click]= [Action StockTypeQuery(4)]"
+                            cm:Message.Attach="[Event Click]= [Action StockTypeQuery(3)]"
                             Content="售罄库存"
                             Margin="8,0,0,0"
                             GroupName="stockPurchaseType"
@@ -108,11 +113,11 @@
                 <DataGridTextColumn Header="产品编码" Width="120" Binding="{Binding ProductCode}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="产品名称" Width="180" Binding="{Binding ProductName}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="数量" Width="80" Binding="{Binding Quantity}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="采购金额" Width="100" Binding="{Binding Expense}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="单件采购成本" Width="120" Binding="{Binding UnitPurchaseCostDisplay}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="头程运费" Width="100" Binding="{Binding TransFee}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="单件头程" Width="88" Binding="{Binding UnitTransFeeDisplay}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="合计成本(单件)" Width="130" Binding="{Binding TotalUnitCostDisplay}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="采购金额" Width="100" Binding="{Binding ExpenseYuanDisplay}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="单件采购成本" Width="120" Binding="{Binding ListUnitPurchaseCostDisplay}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="头程运费" Width="100" Binding="{Binding TransFeeYuanDisplay}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="单件头程" Width="88" Binding="{Binding ListUnitTransFeeDisplay}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="合计成本(单件)" Width="130" Binding="{Binding ListTotalUnitCostDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="支付" Width="72" Binding="{Binding PaymentDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="采购账号" Width="120" Binding="{Binding PurchaseAccount}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="业务员" Width="88" Binding="{Binding UserName}" ElementStyle="{x:Null}"/>

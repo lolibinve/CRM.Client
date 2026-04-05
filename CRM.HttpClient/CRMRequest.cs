@@ -475,7 +475,11 @@ namespace HttpLib
             return false;
         }
 
-        public static async Task<bool> AddOrder(OrderData model)
+        /// <summary>
+        /// 订单新增/编辑，GET <c>crm/order/edit</c>。
+        /// 编辑（<c>id&gt;0</c>）时若用户在页面上更改过采购方式，传 <c>useStock=1</c>，否则 <c>useStock=0</c>。
+        /// </summary>
+        public static async Task<bool> AddOrder(OrderData model, int useStock = 0)
         {
             var parameters = new Dictionary<string, string>()
             {
@@ -502,7 +506,19 @@ namespace HttpLib
                 {"buyerName",model.Buyer},
                 {"phone",model.Phone},
                 {"image",model.ImageBase64Str},
+                {"purchaseMethod", model.PurchaseMethod.ToString(CultureInfo.InvariantCulture)},
+                {"purId", model.PurId ?? ""},
+                {"shipQuantity", model.ShipQuantity.ToString(CultureInfo.InvariantCulture)},
             };
+
+            // 订单“修改”页面提交额外字段：purchaseType / purchaseId / sendAmount
+            if (model.Id > 0)
+            {
+                parameters["purchaseType"] = model.PurchaseMethod.ToString(CultureInfo.InvariantCulture);
+                parameters["purchaseId"] = model.PurId ?? "";
+                parameters["sendAmount"] = model.ShipQuantity.ToString(CultureInfo.InvariantCulture);
+                parameters["useStock"] = useStock.ToString(CultureInfo.InvariantCulture);
+            }
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/order/edit", parameters);
             if (result.IsSuccess)
@@ -673,6 +689,30 @@ namespace HttpLib
         #region 采购账户
 
         /// <summary>
+        /// 触发采购账号余额刷新任务，GET <c>crm/login/taskPurchaseAccountBalance</c>。
+        /// </summary>
+        public static async Task<bool> TaskPurchaseAccountBalance()
+        {
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/login/taskPurchaseAccountBalance", null);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "刷新余额任务失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// 采购账号分页列表，对应 GET <c>crm/purchase/accountList</c>（<c>PurchaseAccountListRequest</c>：<c>pageNum</c>、<c>pageSize</c>）。
         /// </summary>
         public static async Task<PurchaseAccountModel> PurchaseAccountList(int pageNum = 1, int pageSize = 20)
@@ -703,8 +743,8 @@ namespace HttpLib
         }
 
         /// <summary>
-        /// 采购账号新增/编辑，GET <c>crm/purchase/accountEdit</c>（<c>PurchaseAccountEditRequest</c>：<c>id</c>、<c>addTime</c>、<c>moneyIn</c>、<c>name</c>、<c>type</c>、<c>remark</c>）。
-        /// 始终传 <c>id</c>：新增为 <c>0</c>，修改为实际主键；<c>addTime</c> 与 <c>ModifyProduct</c> 中 <c>date</c> 相同，为 <c>yyyy-MM-dd</c> 字符串。
+        /// 采购账号新增/编辑，GET <c>crm/purchase/accountEdit</c>（<c>id</c>、<c>addTime</c>、<c>name</c>、<c>remark</c>；不再传 <c>moneyIn</c>、<c>type</c>）。
+        /// 始终传 <c>id</c>：新增为 <c>0</c>，修改为实际主键；<c>addTime</c> 为 <c>yyyy-MM-dd</c> 字符串。
         /// </summary>
         public static async Task<bool> PurchaseAccountEdit(ProcurementAccountLstModel model)
         {
@@ -726,9 +766,7 @@ namespace HttpLib
             {
                 {"id", model.Id.ToString()},
                 {"addTime", addTimeStr},
-                {"moneyIn", model.Amount.ToString(CultureInfo.InvariantCulture)},
                 {"name", name},
-                {"type", model.AccountType.ToString(CultureInfo.InvariantCulture)},
                 {"remark", model.Remark ?? ""},
             };
 
@@ -786,6 +824,112 @@ namespace HttpLib
             return false;
         }
 
+        /// <summary>
+        /// 采购账号入账，GET <c>crm/purchase/accountCheckIn</c>（<c>PurchaseAccountCheckInRequest</c>：<c>id</c>、<c>amount</c>、<c>type</c>、<c>remark</c>）。
+        /// 写入 <c>purchase_account_check_in</c> 并重算余额（异步）。
+        /// </summary>
+        public static async Task<bool> PurchaseAccountCheckIn(int accountId, long amount, int type, string remark = null)
+        {
+            if (accountId <= 0)
+            {
+                MessageBox.Show("无效的采购账号 id。");
+                return false;
+            }
+
+            if (amount <= 0)
+            {
+                MessageBox.Show("入账金额必须大于 0。");
+                return false;
+            }
+
+            if (type != 0 && type != 1)
+            {
+                MessageBox.Show("资金类型无效。");
+                return false;
+            }
+
+            var parameters = new Dictionary<string, string>
+            {
+                {"id", accountId.ToString(CultureInfo.InvariantCulture)},
+                {"amount", amount.ToString(CultureInfo.InvariantCulture)},
+                {"type", type.ToString(CultureInfo.InvariantCulture)},
+            };
+            if (!string.IsNullOrWhiteSpace(remark))
+                parameters["remark"] = remark.Trim();
+
+            HttpResult result = await CRMHttpClient.GetAsync("crm/purchase/accountCheckIn", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "入账失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 采购账号入账流水分页，GET <c>crm/purchase/accountCheckInList</c>（<c>PurchaseAccountCheckInListRequest</c>）。
+        /// <paramref name="type"/> 为 <c>-1</c> 时不按资金类型过滤。
+        /// <paramref name="startDate"/>、<paramref name="endDate"/> 为 <c>yyyy-MM-dd</c>，非空时传入。
+        /// </summary>
+        public static async Task<PurchaseAccountCheckInListModel> PurchaseAccountCheckInList(
+            string name,
+            int pageNum = 1,
+            int pageSize = 20,
+            int type = -1,
+            string startDate = null,
+            string endDate = null)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                MessageBox.Show("采购账号名称不能为空。");
+                return null;
+            }
+
+            var parameters = new Dictionary<string, string>
+            {
+                {"name", name.Trim()},
+                {"pageNum", pageNum.ToString(CultureInfo.InvariantCulture)},
+                {"pageSize", pageSize.ToString(CultureInfo.InvariantCulture)},
+                {"type", type.ToString(CultureInfo.InvariantCulture)},
+            };
+            if (!string.IsNullOrWhiteSpace(startDate))
+                parameters["startDate"] = startDate.Trim();
+            if (!string.IsNullOrWhiteSpace(endDate))
+                parameters["endDate"] = endDate.Trim();
+
+            HttpResult result = await CRMHttpClient.GetAsync("crm/purchase/accountCheckInList", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<PurchaseAccountCheckInListModel>>(result.Content);
+                if (response.State == 0)
+                {
+                    return response.Value ?? new PurchaseAccountCheckInListModel
+                    {
+                        Count = 0,
+                        List = new List<PurchaseAccountCheckInRecordModel>(),
+                    };
+                }
+
+                MessageBox.Show(response.Desc ?? "获取入账流水失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return null;
+        }
+
         #endregion
 
         #region FBM 采购
@@ -799,14 +943,19 @@ namespace HttpLib
         {
             var parameters = new Dictionary<string, string>()
             {
-                {"pageNum", pageNum.ToString()},
-                {"pageSize", pageSize.ToString()},
-                {"purchaseAccount", purchaseAccount ?? ""},
-                {"buyerName", buyerName ?? ""},
-                {"orderId", orderId ?? ""},
-                {"startDate", startDate ?? ""},
-                {"endDate", endDate ?? ""},
+                {"pageNum", pageNum.ToString(CultureInfo.InvariantCulture)},
+                {"pageSize", pageSize.ToString(CultureInfo.InvariantCulture)},
             };
+            if (!string.IsNullOrWhiteSpace(purchaseAccount))
+                parameters["purchaseAccount"] = purchaseAccount.Trim();
+            if (!string.IsNullOrWhiteSpace(buyerName))
+                parameters["buyerName"] = buyerName.Trim();
+            if (!string.IsNullOrWhiteSpace(orderId))
+                parameters["orderId"] = orderId.Trim();
+            if (!string.IsNullOrWhiteSpace(startDate))
+                parameters["startDate"] = startDate.Trim();
+            if (!string.IsNullOrWhiteSpace(endDate))
+                parameters["endDate"] = endDate.Trim();
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/fbmList", parameters);
             if (result.IsSuccess)
@@ -844,7 +993,7 @@ namespace HttpLib
                 {"orderId", model.OrderId ?? ""},
                 {"addTime", model.PurchaseDateEdit?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""},
                 {"expense", model.Expense.ToString(CultureInfo.InvariantCulture)},
-                {"Uname", model.BuyerName ?? ""},
+                {"uName", model.BuyerName ?? ""},
                 {"accountName", model.PurchaseAccount ?? ""},
                 {"payment", model.Payment.ToString(CultureInfo.InvariantCulture)},
                 {"remark", model.Remark ?? ""},
@@ -907,6 +1056,30 @@ namespace HttpLib
         #endregion
 
         #region 备货汇总（产品库存）
+
+        /// <summary>
+        /// 触发备货汇总库存更新任务，GET <c>crm/login/taskStockManageSummary</c>。
+        /// </summary>
+        public static async Task<bool> TaskStockManageSummary()
+        {
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/login/taskStockManageSummary", null);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "更新库存任务失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// 备货汇总分页列表，GET <c>crm/purchase/stockManageList</c>。
@@ -1020,14 +1193,18 @@ namespace HttpLib
 
         #region 备货采购（备货流水 stockList / stockEdit）
 
+        /// <summary>备货接口金额类参数：以「元」为单位、固定两位小数字符串（与 <see cref="StockPurchaseRecordModel"/> 约定一致）。</summary>
+        private static string FormatStockYuanQuery(decimal yuan) =>
+            yuan.ToString("F2", CultureInfo.InvariantCulture);
+
         /// <summary>
-        /// 备货流水分页列表，GET <c>crm/purchase/stockList</c>。<paramref name="type"/> 必填且不能为 0；
-        /// 与前端库存视图一致时常用：<see cref="StockPurchaseConstants.StockListInTransit"/>（模块2）、<see cref="StockPurchaseConstants.StockListArrivedWarehouse"/>（模块3）、<see cref="StockPurchaseConstants.StockListDeadstock"/>（模块4）、<see cref="StockPurchaseConstants.StockListSoldOut"/>（模块5）。
+        /// 备货流水分页列表，GET <c>crm/purchase/stockList</c>。<paramref name="type"/> 必填；
+        /// 与前端库存视图一致时常用：<see cref="StockShipmentStatus.InTransit"/>（模块2）、<see cref="StockShipmentStatus.ArrivedWarehouse"/>（模块3）、<see cref="StockShipmentStatus.Deadstock"/>（模块4）、<see cref="StockShipmentStatus.SoldOut"/>（模块5）。
         /// </summary>
         public static async Task<StockPurchaseListModel> StockList(int type, int pageNum = 1, int pageSize = 20,
-            string productCode = null, string buyerName = null, string purId = null, string purchaseAccount = null)
+            string productCode = null, string buyerName = null, string purId = null)
         {
-            if (type == 0)
+            if (type < 0)
             {
                 MessageBox.Show("请选择库存/货件类型筛选条件");
                 return null;
@@ -1038,11 +1215,13 @@ namespace HttpLib
                 {"type", type.ToString(CultureInfo.InvariantCulture)},
                 {"pageNum", pageNum.ToString(CultureInfo.InvariantCulture)},
                 {"pageSize", pageSize.ToString(CultureInfo.InvariantCulture)},
-                {"pId", productCode ?? ""},
-                {"buyerName", buyerName ?? ""},
-                {"purId", purId ?? ""},
-                {"purchaseAccount", purchaseAccount ?? ""},
             };
+            if (!string.IsNullOrWhiteSpace(productCode))
+                parameters["pId"] = productCode.Trim();
+            if (!string.IsNullOrWhiteSpace(buyerName))
+                parameters["buyerName"] = buyerName.Trim();
+            if (!string.IsNullOrWhiteSpace(purId))
+                parameters["purId"] = purId.Trim();
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockList", parameters);
             if (result.IsSuccess)
@@ -1084,19 +1263,22 @@ namespace HttpLib
                 {"pId", model.ProductCode ?? ""},
                 {"pName", model.ProductName ?? ""},
                 {"quantity", model.Quantity.ToString(CultureInfo.InvariantCulture)},
-                {"expense", model.Expense.ToString(CultureInfo.InvariantCulture)},
-                {"unitValue", model.UnitValue.ToString(CultureInfo.InvariantCulture)},
+                {"expense", FormatStockYuanQuery(model.Expense)},
+                {"unitValue", FormatStockYuanQuery(model.UnitValue)},
                 {"payment", model.Payment.ToString(CultureInfo.InvariantCulture)},
-                {"transFee", model.TransFee.ToString(CultureInfo.InvariantCulture)},
-                {"unitTransFee", model.UnitTransFee.ToString(CultureInfo.InvariantCulture)},
-                {"unitCost", model.UnitCost.ToString(CultureInfo.InvariantCulture)},
+                {"transFee", FormatStockYuanQuery(model.TransFee)},
+                {"unitTransFee", FormatStockYuanQuery(model.UnitTransFee)},
+                {"unitCost", FormatStockYuanQuery(model.UnitCost)},
                 {"userName", model.UserName ?? ""},
-                {"purchaseAccount", model.PurchaseAccount ?? ""},
                 {"type", model.ShipmentType.ToString(CultureInfo.InvariantCulture)},
                 {"addTime", model.PurchaseDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? ""},
                 {"instockTime", model.InstockDateTime.HasValue ? model.InstockDateTime.Value.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : ""},
                 {"remark", model.Remark ?? ""},
             };
+            if (model.ShipmentTypeOld.HasValue)
+                parameters["typeOld"] = model.ShipmentTypeOld.Value.ToString(CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(model.PurchaseAccount))
+                parameters["purchaseAccount"] = model.PurchaseAccount.Trim();
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockEdit", parameters);
             if (result.IsSuccess)
@@ -1115,6 +1297,93 @@ namespace HttpLib
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 按订单号查 FBM 现金采购，GET <c>crm/purchase/fbmInfoByOrderId</c>。
+        /// 成功 <c>data</c> 为单条 <c>PurchaseRecordFbm</c>（<c>expense</c> 为采购金额）；见 <c>PurchaseController-API(3).md</c> §15。
+        /// </summary>
+        public static async Task<FbmPurchaseRecordModel> FbmInfoByOrderId(string orderId)
+        {
+            if (string.IsNullOrWhiteSpace(orderId))
+            {
+                return null;
+            }
+
+            var parameters = new Dictionary<string, string> { { "orderId", orderId.Trim() } };
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/fbmInfoByOrderId", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<FbmPurchaseRecordModel>>(result.Content);
+                if (response.State == 0)
+                {
+                    return response.Value;
+                }
+
+                MessageBox.Show(response.Desc ?? "未找到 FBM 采购信息");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 按采购批次查备货，GET <c>crm/purchase/stockInfoByPurId</c>。
+        /// 成功 <c>data</c> 为单条 <c>StockRecord</c>（含 <c>stayQuantity</c>、<c>unitCost</c> 等），与 <c>stockList</c> 列表行同形；见 <c>PurchaseController-API(3).md</c> §14。
+        /// </summary>
+        public static async Task<StockPurchaseRecordModel> StockInfoByPurId(string purId)
+        {
+            if (string.IsNullOrWhiteSpace(purId))
+            {
+                return null;
+            }
+
+            var parameters = new Dictionary<string, string> { { "purId", purId.Trim() } };
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockInfoByPurId", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<StockPurchaseRecordModel>>(result.Content);
+                if (response.State == 0)
+                {
+                    return response.Value;
+                }
+
+                MessageBox.Show(response.Desc ?? "未找到该采购批次备货信息");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 滞留剩余库存采购批次列表，GET <c>crm/purchase/stockStalePurIdList</c>。
+        /// 成功 <c>data</c> 为 <c>{ list: string[] }</c>。
+        /// </summary>
+        public static async Task<List<string>> StockStalePurIdList()
+        {
+            HttpResult result = await CRMHttpClient.GetAsync("crm/purchase/stockStalePurIdList", new Dictionary<string, string>());
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<StockStalePurIdListModel>>(result.Content);
+                if (response.State == 0)
+                {
+                    return response.Value?.List ?? new List<string>();
+                }
+
+                MessageBox.Show(response.Desc ?? "获取滞留库存采购批次失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return null;
         }
 
         #endregion

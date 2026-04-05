@@ -1,10 +1,11 @@
-﻿using Caliburn.Micro;
+using Caliburn.Micro;
 using CRM.Modular.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace CRM.Modular.ViewModels
 {
@@ -50,7 +51,29 @@ namespace CRM.Modular.ViewModels
             IsAdmin = info.IsAdmin;
         }
 
+        /// <summary>切换左侧 Tab 时，进入「采购账户」「备货产品」默认执行一次查询以刷新列表。</summary>
+        public void MainTab_SelectionChanged(SelectionChangedEventArgs e)
+        {
+            if (e?.AddedItems == null || e.AddedItems.Count == 0)
+            {
+                return;
+            }
 
+            if (!(e.AddedItems[0] is TabItem tab))
+            {
+                return;
+            }
+
+            var header = tab.Header?.ToString()?.Trim();
+            if (string.Equals(header, "采购账户", StringComparison.Ordinal))
+            {
+                PurchaseAccount?.Query();
+            }
+            else if (string.Equals(header, "备货产品", StringComparison.Ordinal))
+            {
+                StockProduct?.Query();
+            }
+        }
     }
 }
     

@@ -13,6 +13,7 @@
              d:DesignHeight="1080" d:DesignWidth="1920">
     <UserControl.Resources>
         <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
                 <Setter Property="Height" Value="50"/>
             </Style>
@@ -37,8 +38,12 @@
 
         <StackPanel Grid.Row="0" Orientation="Horizontal">
             <Button x:Name="Query" Width="80" Height="35" Content="查询"/>
-            <Button x:Name="Add" Width="80" Height="35" Content="新增" Margin="12,0,0,0"/>
-            <Button x:Name="Delete" Width="80" Height="35" Content="删除" Margin="12,0,0,0"/>
+            <Button x:Name="Add" Width="80" Height="35" Content="新增" Margin="12,0,0,0"
+                    Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <Button x:Name="Delete" Width="80" Height="35" Content="删除" Margin="12,0,0,0"
+                    Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <Button x:Name="RefreshBalance" Width="100" Height="35" Content="刷新余额" Margin="12,0,0,0"
+                    Foreground="White" Background="#D32F2F" BorderThickness="0"/>
         </StackPanel>
 
         <DataGrid x:Name="AccountLst"
@@ -72,25 +77,28 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="日期"
-                                    Width="160"
-                                    Binding="{Binding Date,StringFormat='{}{0:yyyy-MM-dd}',UpdateSourceTrigger=PropertyChanged}"
-                                    ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="转入金额"
-                                    Width="120"
-                                    Binding="{Binding Amount,UpdateSourceTrigger=PropertyChanged}"
-                                    EditingElementStyle="{StaticResource EditingStyle}"
-                                    ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="采购账号"
                                     Width="200"
                                     Binding="{Binding ProcurementAccount,UpdateSourceTrigger=PropertyChanged}"
                                     EditingElementStyle="{StaticResource EditingStyle}"
                                     ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="资金类型"
-                                    Width="120"
-                                    Binding="{Binding FundTypeDisplay}"
-                                    IsReadOnly="True"
-                                    ElementStyle="{x:Null}"/>
+                <DataGridTemplateColumn Header="操作" Width="200" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="转入资金"
+                                        Padding="6,2"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        cm:Message.Attach="[Event Click] = [Action CheckInClick($source,$eventArgs)]"/>
+                                <Button Content="转入明细"
+                                        Padding="6,2"
+                                        Margin="8,0,0,0"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        cm:Message.Attach="[Event Click] = [Action CheckInListClick($source,$eventArgs)]"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="现金余额"
                                     Width="110"
                                     Binding="{Binding BalanceCash, StringFormat='{}{0:N2}'}"

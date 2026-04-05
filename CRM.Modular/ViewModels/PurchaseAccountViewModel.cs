@@ -25,6 +25,9 @@ namespace CRM.Modular.ViewModels
 
         public bool IsProgressIndeterminate { get; set; }
 
+        /// <summary>与主菜单「角色管理」等一致：仅管理员为 true，业务员不可见新增/删除。</summary>
+        public bool IsAdmin { get; set; }
+
         public BindableCollection<ProcurementAccountLstModel> AccountLst { get; set; } = new BindableCollection<ProcurementAccountLstModel>();
 
         public ProcurementAccountLstModel SelectItem { get; set; }
@@ -32,6 +35,7 @@ namespace CRM.Modular.ViewModels
         public PurchaseAccountViewModel(IWindowManager manager)
         {
             windowManager = manager;
+            IsAdmin = IoC.Get<CacheInfo>().IsAdmin;
             Query();
         }
 
@@ -91,10 +95,79 @@ namespace CRM.Modular.ViewModels
         public async void Add()
         {
             AddPurchaseAccountViewModel vm = new AddPurchaseAccountViewModel(null, false);
-            var result = await windowManager.ShowDialogAsync(vm);
-            if (result == true)
+            await windowManager.ShowDialogAsync(vm);
+            if (!vm.WasSuccessful)
+                return;
+
+            await QueryBase(PageInfo?.PageNum ?? 1);
+        }
+
+        /// <summary>列表行「转入资金」：从按钮所在行的 <see cref="FrameworkElement.DataContext"/> 取当前行，再带入该行 <c>Id</c> 打开入账弹窗。</summary>
+        public async void CheckInClick(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement fe) || !(fe.DataContext is ProcurementAccountLstModel row))
+            {
+                MessageBox.Show("无效的采购账号，无法入账。");
+                return;
+            }
+
+            if (row.Id <= 0)
+            {
+                MessageBox.Show("无效的采购账号 id，无法入账。");
+                return;
+            }
+
+            var vm = new PurchaseAccountCheckInViewModel(row);
+            await windowManager.ShowDialogAsync(vm);
+            if (!vm.WasSuccessful)
+                return;
+
+            IsProgressIndeterminate = true;
+            try
             {
                 await QueryBase(PageInfo?.PageNum ?? 1);
+            }
+            finally
+            {
+                IsProgressIndeterminate = false;
+            }
+        }
+
+        /// <summary>查看入账流水：<c>accountCheckInList</c>，<c>name</c> 为当前行采购账号名称，<c>type=-1</c>。</summary>
+        public async void CheckInListClick(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement fe) || !(fe.DataContext is ProcurementAccountLstModel row))
+            {
+                MessageBox.Show("无效的采购账号。");
+                return;
+            }
+
+            var name = (row.ProcurementAccount ?? "").Trim();
+            if (string.IsNullOrEmpty(name))
+            {
+                MessageBox.Show("采购账号名称为空，无法查询流水。");
+                return;
+            }
+
+            var vm = new PurchaseAccountCheckInListViewModel(name);
+            await windowManager.ShowDialogAsync(vm);
+        }
+
+        /// <summary>调用 <c>crm/login/taskPurchaseAccountBalance</c> 触发余额刷新，成功后刷新当前页。</summary>
+        public async void RefreshBalance()
+        {
+            IsProgressIndeterminate = true;
+            try
+            {
+                var ok = await CRMRequest.TaskPurchaseAccountBalance();
+                if (ok)
+                {
+                    await QueryBase(PageInfo?.PageNum ?? 1);
+                }
+            }
+            finally
+            {
+                IsProgressIndeterminate = false;
             }
         }
 
