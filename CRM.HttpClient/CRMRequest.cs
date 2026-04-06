@@ -828,7 +828,7 @@ namespace HttpLib
         /// 采购账号入账，GET <c>crm/purchase/accountCheckIn</c>（<c>PurchaseAccountCheckInRequest</c>：<c>id</c>、<c>amount</c>、<c>type</c>、<c>remark</c>）。
         /// 写入 <c>purchase_account_check_in</c> 并重算余额（异步）。
         /// </summary>
-        public static async Task<bool> PurchaseAccountCheckIn(int accountId, long amount, int type, string remark = null)
+        public static async Task<bool> PurchaseAccountCheckIn(int accountId, decimal amount, int type, string remark = null)
         {
             if (accountId <= 0)
             {
@@ -836,9 +836,9 @@ namespace HttpLib
                 return false;
             }
 
-            if (amount <= 0)
+            if (amount == 0)
             {
-                MessageBox.Show("入账金额必须大于 0。");
+                MessageBox.Show("入账金额不能为 0。");
                 return false;
             }
 
@@ -936,6 +936,7 @@ namespace HttpLib
 
         /// <summary>
         /// FBM（现金采购）分页列表，GET <c>crm/purchase/fbmList</c>。
+        /// 查询参数含 <c>purchaseAccount</c>（采购账号）、<c>buyerName</c>、<c>orderId</c>、日期等；返回含 <c>sumAmount</c>（筛选合计金额）。
         /// </summary>
         public static async Task<FbmPurchaseListModel> FbmList(int pageNum, int pageSize,
             string purchaseAccount = null, string buyerName = null, string orderId = null,
@@ -1083,14 +1084,20 @@ namespace HttpLib
 
         /// <summary>
         /// 备货汇总分页列表，GET <c>crm/purchase/stockManageList</c>。
+        /// 若提供 <paramref name="user"/>，增加 Query 参数 <c>user</c>。
         /// </summary>
-        public static async Task<StockProductListModel> StockManageList(int pageNum = 1, int pageSize = 20)
+        public static async Task<StockProductListModel> StockManageList(int pageNum = 1, int pageSize = 20, string user = null)
         {
             var parameters = new Dictionary<string, string>()
             {
                 {"pageNum", pageNum.ToString()},
                 {"pageSize", pageSize.ToString()},
             };
+
+            if (!string.IsNullOrWhiteSpace(user))
+            {
+                parameters["user"] = user.Trim();
+            }
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockManageList", parameters);
             if (result.IsSuccess)
@@ -1114,8 +1121,9 @@ namespace HttpLib
         /// <summary>
         /// 备货汇总新增/编辑，GET <c>crm/purchase/stockManageEdit</c>（<c>pId</c>、<c>pName</c>）。
         /// 始终传 <c>id</c>：新增为 <c>0</c>，修改为实际主键。
+        /// 新增时若提供 <paramref name="loginAccountForUserParam"/>，额外传 Query <c>user</c>。
         /// </summary>
-        public static async Task<bool> StockManageEdit(StockProductRecordModel model)
+        public static async Task<bool> StockManageEdit(StockProductRecordModel model, string loginAccountForUserParam = null)
         {
             if (model == null)
             {
@@ -1140,6 +1148,11 @@ namespace HttpLib
                 {"pId", model.ProductCode.Trim()},
                 {"pName", model.ProductName.Trim()},
             };
+
+            if (model.Id == 0 && !string.IsNullOrWhiteSpace(loginAccountForUserParam))
+            {
+                parameters["user"] = loginAccountForUserParam.Trim();
+            }
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockManageEdit", parameters);
             if (result.IsSuccess)
@@ -1200,9 +1213,11 @@ namespace HttpLib
         /// <summary>
         /// 备货流水分页列表，GET <c>crm/purchase/stockList</c>。<paramref name="type"/> 必填；
         /// 与前端库存视图一致时常用：<see cref="StockShipmentStatus.InTransit"/>（模块2）、<see cref="StockShipmentStatus.ArrivedWarehouse"/>（模块3）、<see cref="StockShipmentStatus.Deadstock"/>（模块4）、<see cref="StockShipmentStatus.SoldOut"/>（模块5）。
+        /// 返回 data 含 <c>sumAmount</c>（当前筛选合计金额）及库存视图计数等。
+        /// 可选查询参数 <c>purchaseAccount</c> 与 <see cref="FbmList"/> 一致。
         /// </summary>
         public static async Task<StockPurchaseListModel> StockList(int type, int pageNum = 1, int pageSize = 20,
-            string productCode = null, string buyerName = null, string purId = null)
+            string productCode = null, string buyerName = null, string purId = null, string purchaseAccount = null)
         {
             if (type < 0)
             {
@@ -1222,6 +1237,8 @@ namespace HttpLib
                 parameters["buyerName"] = buyerName.Trim();
             if (!string.IsNullOrWhiteSpace(purId))
                 parameters["purId"] = purId.Trim();
+            if (!string.IsNullOrWhiteSpace(purchaseAccount))
+                parameters["purchaseAccount"] = purchaseAccount.Trim();
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockList", parameters);
             if (result.IsSuccess)
@@ -1300,6 +1317,41 @@ namespace HttpLib
         }
 
         /// <summary>
+        /// 备货流水删除：GET <c>crm/purchase/stockRecordDel</c>，Query 参数 <c>id</c>（见 <c>PurchaseController-API(3).md</c> §9）。
+        /// </summary>
+        public static async Task<bool> StockPurchaseRecordDelete(int id)
+        {
+            if (id <= 0)
+            {
+                MessageBox.Show("无效的记录 id，无法删除。");
+                return false;
+            }
+
+            var parameters = new Dictionary<string, string>()
+            {
+                {"id", id.ToString(CultureInfo.InvariantCulture)},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockRecordDel", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "删除失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// 按订单号查 FBM 现金采购，GET <c>crm/purchase/fbmInfoByOrderId</c>。
         /// 成功 <c>data</c> 为单条 <c>PurchaseRecordFbm</c>（<c>expense</c> 为采购金额）；见 <c>PurchaseController-API(3).md</c> §15。
         /// </summary>
@@ -1362,21 +1414,23 @@ namespace HttpLib
         }
 
         /// <summary>
-        /// 滞留剩余库存采购批次列表，GET <c>crm/purchase/stockStalePurIdList</c>。
+        /// 备货/滞销库存采购批次列表，GET <c>crm/purchase/stockTypePurIdList</c>。
+        /// <paramref name="type"/>：1 备货库存，2 滞销库存。
         /// 成功 <c>data</c> 为 <c>{ list: string[] }</c>。
         /// </summary>
-        public static async Task<List<string>> StockStalePurIdList()
+        public static async Task<List<string>> StockTypePurIdList(int type)
         {
-            HttpResult result = await CRMHttpClient.GetAsync("crm/purchase/stockStalePurIdList", new Dictionary<string, string>());
+            var parameters = new Dictionary<string, string> { { "type", type.ToString() } };
+            HttpResult result = await CRMHttpClient.GetAsync("crm/purchase/stockTypePurIdList", parameters);
             if (result.IsSuccess)
             {
-                var response = JsonHelper.DeserializeObject<CRMHttpResponse<StockStalePurIdListModel>>(result.Content);
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<StockTypePurIdListModel>>(result.Content);
                 if (response.State == 0)
                 {
                     return response.Value?.List ?? new List<string>();
                 }
 
-                MessageBox.Show(response.Desc ?? "获取滞留库存采购批次失败");
+                MessageBox.Show(response.Desc ?? "获取采购批次列表失败");
             }
             else
             {

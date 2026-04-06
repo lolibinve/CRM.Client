@@ -15,7 +15,7 @@ namespace HttpLib
     public  class CRMHttpClient
     {
         /// <summary>
-        /// 获取文本格式的响应信息
+        /// 
         /// </summary>
         /// <param name="relativeUri">URL地址</param>
         /// <param name="method">方法</param>
@@ -28,7 +28,9 @@ namespace HttpLib
             Dictionary<string, string> formDataStrDic = null, Dictionary<string, string> formDataFileDic = null, CancellationTokenSource cts = null,bool isStream = false)
         {
 #if DEBUG
-            const string BaseUrl = "http://192.168.1.7:8080";
+            //const string BaseUrl = "http://192.168.1.7:8080";
+           const string BaseUrl = "http://175.24.61.38:8080";
+
 #else
             const string BaseUrl = "http://175.24.61.38:8080";
 #endif

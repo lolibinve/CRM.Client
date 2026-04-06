@@ -1,4 +1,4 @@
-﻿using Caliburn.Micro;
+using Caliburn.Micro;
 using CRM.Model;
 using CRM.Modular.Models;
 using CRM.Modular.Views;
@@ -18,6 +18,7 @@ namespace CRM.Modular.ViewModels
 
     public class AddExchangeRateViewModel : Screen
     {
+        private bool _isSubmitting;
 
         private ExchangeData _exchange = new ExchangeData();
         public ExchangeData exchange
@@ -45,16 +46,30 @@ namespace CRM.Modular.ViewModels
 
         public async void Sure()
         {
-            var result = await CRMRequest.ModifyExchange(exchange);
-            if (result != null)
+            if (_isSubmitting)
             {
-                exchange.Clone(result);
-                var temp = this.GetView();
-                if (temp is Window win)
+                return;
+            }
+
+            _isSubmitting = true;
+            try
+            {
+                var result = await CRMRequest.ModifyExchange(exchange);
+                if (result != null)
                 {
-                    win.DialogResult = true;
+                    exchange.Clone(result);
+                    var temp = this.GetView();
+                    if (temp is Window win)
+                    {
+                        win.DialogResult = true;
+                    }
+
+                    await TryCloseAsync();
                 }
-                await TryCloseAsync();
+            }
+            finally
+            {
+                _isSubmitting = false;
             }
         }
 

@@ -24,6 +24,8 @@ namespace CRM.Modular.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class AddStockPurchaseViewModel : Screen
     {
+        private bool _isSubmitting;
+
         private readonly int? _originalShipmentType;
 
         public List<PaymentPickItem> PaymentItems { get; } = new List<PaymentPickItem>
@@ -193,6 +195,11 @@ namespace CRM.Modular.ViewModels
 
         public async void Sure()
         {
+            if (_isSubmitting)
+            {
+                return;
+            }
+
             if (IsViewOnly)
             {
                 return;
@@ -216,9 +223,9 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
-            if (Record.Quantity <= 0)
+            if (Record.Quantity == 0)
             {
-                MessageBox.Show("请输入有效的采购数量");
+                MessageBox.Show("采购数量不能为 0");
                 return;
             }
 
@@ -249,9 +256,9 @@ namespace CRM.Modular.ViewModels
                 Record.InstockDateTime = null;
             }
 
-            if (Record.ShipmentType == (int)StockShipmentStatus.ArrivedWarehouse && Record.TransFee <= 0)
+            if (Record.ShipmentType == (int)StockShipmentStatus.ArrivedWarehouse && Record.TransFee == 0)
             {
-                MessageBox.Show("缺少运费");
+                MessageBox.Show("货件到仓时请填写头程运费");
                 return;
             }
 
@@ -260,19 +267,27 @@ namespace CRM.Modular.ViewModels
                 Record.PurchaseDate = DateTime.Now.Date;
             }
 
-            var ok = await CRMRequest.StockPurchaseEdit(Record);
-            if (!ok)
+            _isSubmitting = true;
+            try
             {
-                return;
-            }
+                var ok = await CRMRequest.StockPurchaseEdit(Record);
+                if (!ok)
+                {
+                    return;
+                }
 
-            var temp = GetView();
-            if (temp is Window win)
+                var temp = GetView();
+                if (temp is Window win)
+                {
+                    win.DialogResult = true;
+                }
+
+                await TryCloseAsync();
+            }
+            finally
             {
-                win.DialogResult = true;
+                _isSubmitting = false;
             }
-
-            await TryCloseAsync();
         }
 
         public Task CloseForm()

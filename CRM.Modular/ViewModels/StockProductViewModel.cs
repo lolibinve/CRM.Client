@@ -28,6 +28,9 @@ namespace CRM.Modular.ViewModels
 
         public bool IsProgressIndeterminate { get; set; }
 
+        /// <summary>与采购账户页面一致：仅管理员可见「更新库存」等。</summary>
+        public bool IsAdmin { get; set; }
+
         public BindableCollection<StockProductRecordModel> RecordLst { get; set; } = new BindableCollection<StockProductRecordModel>();
 
         public StockProductRecordModel SelectItem { get; set; }
@@ -35,6 +38,7 @@ namespace CRM.Modular.ViewModels
         public StockProductViewModel(IWindowManager manager)
         {
             windowManager = manager;
+            IsAdmin = IoC.Get<CacheInfo>().IsAdmin;
             _ = QueryBase(1);
         }
 
@@ -53,7 +57,8 @@ namespace CRM.Modular.ViewModels
             IsProgressIndeterminate = true;
             try
             {
-                var result = await CRMRequest.StockManageList(pageNum, PageSizeConst);
+                var login = IoC.Get<CacheInfo>()?.LoginAccount;
+                var result = await CRMRequest.StockManageList(pageNum, PageSizeConst, login);
                 if (result != null)
                 {
                     RecordLst = new BindableCollection<StockProductRecordModel>(result.List ?? new List<StockProductRecordModel>());

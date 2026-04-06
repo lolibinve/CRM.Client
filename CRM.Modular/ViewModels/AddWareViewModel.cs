@@ -1,4 +1,4 @@
-﻿using Caliburn.Micro;
+using Caliburn.Micro;
 using PropertyChanged;
 using System.Collections.Generic;
 using System.Windows;
@@ -106,38 +106,54 @@ namespace CRM.Modular.ViewModels
 
 
 
+        private bool _isSubmitting;
+
         public async void Sure()
         {
-            this.Ware.Child = this.Child;
-            if (Child != null && Child.Count != 0)
+            if (_isSubmitting)
             {
-                var first = Child.FirstOrDefault();
-                Ware.MainImageUrl = first.MainImageUrl;
+                return;
             }
 
-            this.Ware.English = English.LanModel;
-            this.Ware.France = France.LanModel;
-            this.Ware.German = German.LanModel;
-            this.Ware.Italy = Italy.LanModel;
-            this.Ware.Spain = Spain.LanModel;
-            this.Ware.Chinese = Chinese.LanModel;
-            this.Ware.Japan = Japan.LanModel;
-            this.Ware.Arabic = Arabic.LanModel;
-            this.Ware.Dutch = Dutch.LanModel;
-            this.Ware.Svenska = Svenska.LanModel;
-            this.Ware.Polski = Polski.LanModel;
-            this.Ware.Portuguese = Portuguese.LanModel;
-            this.Ware.Korean = Korean.LanModel;
-
-            var result = await CRMRequest.AddWare(Ware);
-            if (result)
+            _isSubmitting = true;
+            try
             {
-                var temp = this.GetView();
-                if (temp is Window win)
+                this.Ware.Child = this.Child;
+                if (Child != null && Child.Count != 0)
                 {
-                    win.DialogResult = true;
+                    var first = Child.FirstOrDefault();
+                    Ware.MainImageUrl = first.MainImageUrl;
                 }
-                await TryCloseAsync();
+
+                this.Ware.English = English.LanModel;
+                this.Ware.France = France.LanModel;
+                this.Ware.German = German.LanModel;
+                this.Ware.Italy = Italy.LanModel;
+                this.Ware.Spain = Spain.LanModel;
+                this.Ware.Chinese = Chinese.LanModel;
+                this.Ware.Japan = Japan.LanModel;
+                this.Ware.Arabic = Arabic.LanModel;
+                this.Ware.Dutch = Dutch.LanModel;
+                this.Ware.Svenska = Svenska.LanModel;
+                this.Ware.Polski = Polski.LanModel;
+                this.Ware.Portuguese = Portuguese.LanModel;
+                this.Ware.Korean = Korean.LanModel;
+
+                var result = await CRMRequest.AddWare(Ware);
+                if (result)
+                {
+                    var temp = this.GetView();
+                    if (temp is Window win)
+                    {
+                        win.DialogResult = true;
+                    }
+
+                    await TryCloseAsync();
+                }
+            }
+            finally
+            {
+                _isSubmitting = false;
             }
         }
 

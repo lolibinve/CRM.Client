@@ -1,4 +1,4 @@
-﻿using Caliburn.Micro;
+using Caliburn.Micro;
 using CRM.Model;
 using CRM.Modular.Help;
 using CRM.Modular.Models;
@@ -18,6 +18,8 @@ namespace CRM.Modular.ViewModels
 
     public class AddProductViewModel : Screen
     {
+        private bool _isSubmitting;
+
         public RoleData SelectRole { set; get; }
 
         private ProductData _product = new ProductData();
@@ -59,18 +61,32 @@ namespace CRM.Modular.ViewModels
 
         public async void Sure()
         {
-            IsProgressIndeterminate = true;
-            var result = await CRMRequest.ModifyProduct(product);
-            if (result != null)
+            if (_isSubmitting)
             {
-                product.Clone(result);
-                var temp = this.GetView();
-                if (temp is Window win)
+                return;
+            }
+
+            _isSubmitting = true;
+            IsProgressIndeterminate = true;
+            try
+            {
+                var result = await CRMRequest.ModifyProduct(product);
+                if (result != null)
                 {
-                    win.DialogResult = true;
+                    product.Clone(result);
+                    var temp = this.GetView();
+                    if (temp is Window win)
+                    {
+                        win.DialogResult = true;
+                    }
+
+                    await TryCloseAsync();
                 }
+            }
+            finally
+            {
                 IsProgressIndeterminate = false;
-                await TryCloseAsync();
+                _isSubmitting = false;
             }
         }
 

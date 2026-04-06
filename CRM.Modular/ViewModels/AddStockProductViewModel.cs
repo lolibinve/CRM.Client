@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using CRM.Model;
+using CRM.Modular.Models;
 using HttpLib;
 using PropertyChanged;
 using System;
@@ -14,6 +15,8 @@ namespace CRM.Modular.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class AddStockProductViewModel : Screen
     {
+        private bool _isSubmitting;
+
         public StockProductRecordModel Record { get; set; } = new StockProductRecordModel();
 
         public string Title { get; set; }
@@ -33,6 +36,11 @@ namespace CRM.Modular.ViewModels
 
         public async void Sure()
         {
+            if (_isSubmitting)
+            {
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(Record.ProductCode))
             {
                 MessageBox.Show("请输入产品编码");
@@ -45,19 +53,28 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
-            var ok = await CRMRequest.StockManageEdit(Record);
-            if (!ok)
+            _isSubmitting = true;
+            try
             {
-                return;
-            }
+                var login = IoC.Get<CacheInfo>()?.LoginAccount;
+                var ok = await CRMRequest.StockManageEdit(Record, login);
+                if (!ok)
+                {
+                    return;
+                }
 
-            var temp = GetView();
-            if (temp is Window win)
+                var temp = GetView();
+                if (temp is Window win)
+                {
+                    win.DialogResult = true;
+                }
+
+                await TryCloseAsync();
+            }
+            finally
             {
-                win.DialogResult = true;
+                _isSubmitting = false;
             }
-
-            await TryCloseAsync();
         }
 
         public Task CloseForm()

@@ -15,11 +15,13 @@ namespace CRM.Modular.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class PurchaseAccountCheckInViewModel : Screen
     {
+        private bool _isSubmitting;
+
         public int AccountId { get; }
 
         public string Title { get; set; }
 
-        /// <summary>界面输入的转入金额（元，整型）。</summary>
+        /// <summary>界面输入的转入金额（元；支持小数与负数）。</summary>
         public string AmountInput { get; set; } = "";
 
         private int _fundType;
@@ -69,6 +71,11 @@ namespace CRM.Modular.ViewModels
 
         public async void Sure()
         {
+            if (_isSubmitting)
+            {
+                return;
+            }
+
             if (AccountId <= 0)
             {
                 MessageBox.Show("无效的采购账号。");
@@ -76,23 +83,35 @@ namespace CRM.Modular.ViewModels
             }
 
             var trimmed = (AmountInput ?? "").Trim().Replace(",", "").Replace(" ", "");
-            if (!long.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out var amount) || amount <= 0)
+            if (!decimal.TryParse(trimmed, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var amount) || amount == 0)
             {
-                MessageBox.Show("请输入大于 0 的转入金额（整数）。");
+                MessageBox.Show("请输入非零的转入金额（支持小数与负数）。");
                 return;
             }
 
-            var ok = await CRMRequest.PurchaseAccountCheckIn(AccountId, amount, _fundType, Remark);
-            if (!ok)
-                return;
+            _isSubmitting = true;
+            try
+            {
+                var ok = await CRMRequest.PurchaseAccountCheckIn(AccountId, amount, _fundType, Remark);
+                if (!ok)
+                {
+                    return;
+                }
 
-            WasSuccessful = true;
+                WasSuccessful = true;
 
-            var temp = GetView();
-            if (temp is Window win)
-                win.DialogResult = true;
+                var temp = GetView();
+                if (temp is Window win)
+                {
+                    win.DialogResult = true;
+                }
 
-            await TryCloseAsync();
+                await TryCloseAsync();
+            }
+            finally
+            {
+                _isSubmitting = false;
+            }
         }
 
         public Task CloseForm()

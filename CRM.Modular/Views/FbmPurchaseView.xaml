@@ -13,6 +13,7 @@
              d:DesignHeight="1080" d:DesignWidth="1920">
     <UserControl.Resources>
         <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
                 <Setter Property="Height" Value="50"/>
             </Style>
@@ -32,6 +33,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
@@ -47,26 +49,32 @@
             <ComboBox Width="160" Margin="10,0,0,0"
                       ItemsSource="{Binding AccountFilterList}"
                       SelectedItem="{Binding SelectedFilterAccount, Mode=TwoWay}"/>
-            <TextBlock Text="业务员：" Margin="12,0,0,0"/>
+            <TextBlock Text="业务员：" Margin="12,0,0,0"
+                       Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <ComboBox Width="140" Margin="10,0,0,0"
                       ItemsSource="{Binding RoleSource}"
                       DisplayMemberPath="Name"
-                      SelectedItem="{Binding SelectRole, Mode=TwoWay}"/>
+                      SelectedItem="{Binding SelectRole, Mode=TwoWay}"
+                      Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <TextBox x:Name="OrderIdSearch" wpf:HintAssist.Hint="订单号" MinWidth="160" Margin="12,0,0,0"/>
             <Button x:Name="Query" Width="80" Height="35" Content="查询" Margin="12,0,0,0"/>
             <Button x:Name="Add" Width="80" Height="35" Content="新增" Margin="10,0,0,0"/>
             <Button x:Name="Delete" Width="80" Height="35" Content="删除" Margin="10,0,0,0"/>
         </StackPanel>
 
+        <TextBlock Grid.Row="2" Margin="0,0,0,8" FontSize="14"
+                   Text="{Binding SumAmount, StringFormat='FBM采购总金额：{0:N2} 元'}"/>
+
         <DataGrid x:Name="RecordLst"
-                  Grid.Row="2"
+                  Grid.Row="3"
                   AutoGenerateColumns="False"
                   LoadingRow="Lst_LoadingRow"
                   CanUserAddRows="False"
                   IsReadOnly="True"
                   SelectionMode="Single"
                   SelectedItem="{Binding SelectItem}"
-                  VerticalAlignment="Stretch">
+                  VerticalAlignment="Stretch"
+                  cm:Message.Attach="[Event MouseDoubleClick] = [Action Edit]">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="选中" Width="56" IsReadOnly="False">
                     <DataGridTemplateColumn.CellTemplate>
@@ -100,7 +108,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <Grid Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <Grid Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Center">
             <t:Pagination x:Name="Pagination" Height="40"
                           PageNumber="{Binding PageInfo.PageNum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           ItemsCount="{Binding PageInfo.Total}"
@@ -110,7 +118,7 @@
                           cm:Message.Attach="[Event PageNumberChanged]= [Action Pagination_OnPageNumberChanged($source,$eventArgs)]"/>
         </Grid>
 
-        <Grid Grid.Row="0" Grid.RowSpan="4">
+        <Grid Grid.Row="0" Grid.RowSpan="5">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Style.Triggers>

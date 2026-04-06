@@ -36,6 +36,9 @@ namespace CRM.Model
         [DataMember(Name = "pName")]
         public string ProductName { get; set; }
 
+        /// <summary>业务员，对应列表接口 <c>user</c>。</summary>
+        [DataMember(Name = "user")]
+        public string User { get; set; }
 
         /// <summary>采购运输中库存（自动计算展示）。</summary>
         [DataMember(Name = "inTrans")]

@@ -16,6 +16,10 @@ namespace CRM.Model
         [DataMember(Name = "count")]
         public int Count { get; set; }
 
+        /// <summary>当前筛选条件下采购金额合计（元，可含小数；与列表 <c>expense</c> 汇总一致）。</summary>
+        [DataMember(Name = "sumAmount")]
+        public decimal SumAmount { get; set; }
+
         [DataMember(Name = "list")]
         public List<FbmPurchaseRecordModel> List { get; set; }
     }

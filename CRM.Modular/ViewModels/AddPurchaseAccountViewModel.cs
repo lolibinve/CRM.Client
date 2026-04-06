@@ -11,6 +11,8 @@ namespace CRM.Modular.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class AddPurchaseAccountViewModel : Screen
     {
+        private bool _isSubmitting;
+
         public ProcurementAccountLstModel Account { get; set; } = new ProcurementAccountLstModel();
         public string Title { get; set; }
         public bool WasSuccessful { get; private set; }
@@ -40,6 +42,11 @@ namespace CRM.Modular.ViewModels
 
         public async void Sure()
         {
+            if (_isSubmitting)
+            {
+                return;
+            }
+
             if (!Account.Date.HasValue)
             {
                 MessageBox.Show("请选择日期");
@@ -52,21 +59,29 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
-            var ok = await CRMRequest.PurchaseAccountEdit(Account);
-            if (!ok)
+            _isSubmitting = true;
+            try
             {
-                return;
+                var ok = await CRMRequest.PurchaseAccountEdit(Account);
+                if (!ok)
+                {
+                    return;
+                }
+
+                WasSuccessful = true;
+
+                var temp = GetView();
+                if (temp is Window win)
+                {
+                    win.DialogResult = true;
+                }
+
+                await TryCloseAsync();
             }
-
-            WasSuccessful = true;
-
-            var temp = GetView();
-            if (temp is Window win)
+            finally
             {
-                win.DialogResult = true;
+                _isSubmitting = false;
             }
-
-            await TryCloseAsync();
         }
 
         public Task CloseForm()

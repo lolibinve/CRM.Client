@@ -50,14 +50,18 @@ namespace CRM.Model
         [DataMember(Name = "outsaleCount")]
         public int OutsaleCount { get; set; }
 
+        /// <summary>当前筛选条件下金额合计（元，可含小数；与接口 <c>sumAmount</c> 一致）。</summary>
+        [DataMember(Name = "sumAmount")]
+        public decimal SumAmount { get; set; }
+
         [DataMember(Name = "list")]
         public List<StockPurchaseRecordModel> List { get; set; }
     }
 
-    /// <summary><c>stockStalePurIdList</c> 返回数据：滞留剩余库存采购批次列表。</summary>
+    /// <summary><c>stockTypePurIdList</c> 返回数据：备货/滞销库存采购批次列表。</summary>
     [DataContract]
     [AddINotifyPropertyChangedInterface]
-    public class StockStalePurIdListModel
+    public class StockTypePurIdListModel
     {
         [DataMember(Name = "list")]
         public List<string> List { get; set; }
@@ -97,9 +101,9 @@ namespace CRM.Model
         [DataMember(Name = "quantity")]
         public int Quantity { get; set; }
 
-        /// <summary>采购金额（接口为「元」；与后端约定为整数元或小数元均可反序列化）。</summary>
+        /// <summary>采购金额（接口为「元」；可含小数与负数）。</summary>
         [DataMember(Name = "expense")]
-        public int Expense { get; set; }
+        public decimal Expense { get; set; }
 
         /// <summary>单件采购成本（仅采购金额均摊）；接口 <c>unitValue</c>，单位为 <b>元</b>（可含小数）。</summary>
         [DataMember(Name = "unitValue")]
@@ -116,9 +120,9 @@ namespace CRM.Model
         [DataMember(Name = "payment")]
         public int Payment { get; set; }
 
-        /// <summary>头程运费总额（接口整型，单位为「元」整数）。</summary>
+        /// <summary>头程运费总额（单位为「元」；可含小数与负数）。</summary>
         [DataMember(Name = "transFee")]
-        public int TransFee { get; set; }
+        public decimal TransFee { get; set; }
 
         /// <summary>单件头程运费；接口 <c>unitTransFee</c>，单位为 <b>元</b>。</summary>
         [DataMember(Name = "unitTransFee")]
@@ -199,19 +203,19 @@ namespace CRM.Model
         [IgnoreDataMember]
         [DependsOn(nameof(Expense), nameof(Quantity))]
         public string UnitPurchaseCostDisplay =>
-            Quantity > 0 ? FormatYuanDecimal(PerUnitYuanFromTotalYuan(Expense, Quantity)) : "-";
+            Quantity != 0 ? FormatYuanDecimal(PerUnitYuanFromTotalYuan(Expense, Quantity)) : "-";
 
         /// <summary>编辑页：单件头程，与 <see cref="UnitTransFee"/> 一致。</summary>
         [IgnoreDataMember]
         [DependsOn(nameof(TransFee), nameof(Quantity))]
         public string UnitTransFeeDisplay =>
-            Quantity > 0 ? FormatYuanDecimal(PerUnitYuanFromTotalYuan(TransFee, Quantity)) : "-";
+            Quantity != 0 ? FormatYuanDecimal(PerUnitYuanFromTotalYuan(TransFee, Quantity)) : "-";
 
         /// <summary>编辑页：单件合计成本，与 <see cref="UnitCost"/> 一致（采购+头程总额一次均分）。</summary>
         [IgnoreDataMember]
         [DependsOn(nameof(Expense), nameof(Quantity), nameof(TransFee))]
         public string TotalUnitCostDisplay =>
-            Quantity > 0 ? FormatYuanDecimal(PerUnitTotalYuanFromPurchaseAndTrans(Expense, TransFee, Quantity)) : "-";
+            Quantity != 0 ? FormatYuanDecimal(PerUnitTotalYuanFromPurchaseAndTrans(Expense, TransFee, Quantity)) : "-";
 
         /// <summary>列表页：单件采购成本，仅展示接口 <c>unitValue</c>（元）。</summary>
         [IgnoreDataMember]
@@ -228,31 +232,27 @@ namespace CRM.Model
         [DependsOn(nameof(UnitCost))]
         public string ListTotalUnitCostDisplay => FormatYuanDecimal(UnitCost);
 
-        /// <summary>列表：采购金额（元）两位小数，与接口「元」整型一致。</summary>
+        /// <summary>列表：采购金额（元）两位小数。</summary>
         [IgnoreDataMember]
         [DependsOn(nameof(Expense))]
-        public string ExpenseYuanDisplay => FormatYuanInteger(Expense);
+        public string ExpenseYuanDisplay => FormatYuanDecimal(Expense);
 
         /// <summary>列表：头程运费总额（元）两位小数。</summary>
         [IgnoreDataMember]
         [DependsOn(nameof(TransFee))]
-        public string TransFeeYuanDisplay => FormatYuanInteger(TransFee);
+        public string TransFeeYuanDisplay => FormatYuanDecimal(TransFee);
 
         /// <summary>将「元」格式化为两位小数展示。</summary>
         private static string FormatYuanDecimal(decimal yuan) =>
             yuan.ToString("F2", CultureInfo.InvariantCulture);
 
-        /// <summary>将「元」整型格式化为两位小数（总额类字段）。</summary>
-        private static string FormatYuanInteger(int yuan) =>
-            yuan.ToString("F2", CultureInfo.InvariantCulture);
-
-        /// <summary>总「元」整数按数量摊成单件「元」，与 <see cref="RecalculateUnitFieldsForSave"/> 一致。</summary>
-        private static decimal PerUnitYuanFromTotalYuan(int totalYuan, int quantity) =>
-            quantity <= 0 ? 0m : Math.Round((decimal)totalYuan / quantity, 2, MidpointRounding.AwayFromZero);
+        /// <summary>总「元」按数量摊成单件「元」，与 <see cref="RecalculateUnitFieldsForSave"/> 一致。</summary>
+        private static decimal PerUnitYuanFromTotalYuan(decimal totalYuan, int quantity) =>
+            quantity == 0 ? 0m : Math.Round(totalYuan / quantity, 2, MidpointRounding.AwayFromZero);
 
         /// <summary>采购+头程总「元」按数量摊成单件合计「元」。</summary>
-        private static decimal PerUnitTotalYuanFromPurchaseAndTrans(int expenseYuan, int transFeeYuan, int quantity) =>
-            quantity <= 0 ? 0m : Math.Round(((decimal)expenseYuan + transFeeYuan) / quantity, 2, MidpointRounding.AwayFromZero);
+        private static decimal PerUnitTotalYuanFromPurchaseAndTrans(decimal expenseYuan, decimal transFeeYuan, int quantity) =>
+            quantity == 0 ? 0m : Math.Round((expenseYuan + transFeeYuan) / quantity, 2, MidpointRounding.AwayFromZero);
 
         [IgnoreDataMember]
         [DependsOn(nameof(ShipmentType))]
@@ -283,6 +283,10 @@ namespace CRM.Model
         public string PaymentDisplay =>
             Payment == 0 ? "现金支付" : (Payment == 1 || Payment == 2) ? "诚意赊" : Payment.ToString(CultureInfo.InvariantCulture);
 
+        /// <summary>列表勾选（仅 UI）。</summary>
+        [DataMember(IsRequired = false)]
+        public bool IsCheck { get; set; }
+
         /// <summary>根据接口字段 <c>addTime</c>（<see cref="AddTimeToken"/>）填充界面用 <see cref="PurchaseDate"/>；列表/编辑打开时应调用。</summary>
         public void SyncPurchaseDateFromAddTime()
         {
@@ -295,7 +299,7 @@ namespace CRM.Model
         /// </summary>
         public void RecalculateUnitFieldsForSave()
         {
-            if (Quantity <= 0)
+            if (Quantity == 0)
             {
                 UnitCost = 0m;
                 UnitTransFee = 0m;

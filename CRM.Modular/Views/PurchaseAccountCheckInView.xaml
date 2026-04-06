@@ -51,7 +51,7 @@
                          IsChecked="{Binding IsCashType, Mode=TwoWay}"
                          Style="{StaticResource MaterialDesignChoiceChipAccentOutlineRadioButton}"/>
             <RadioButton Width="140" Height="35" Margin="16,0,0,0"
-                         Content="到期诚意赊"
+                         Content="账期诚意赊"
                          GroupName="CheckInFundType"
                          IsChecked="{Binding IsCreditType, Mode=TwoWay}"
                          Style="{StaticResource MaterialDesignChoiceChipAccentOutlineRadioButton}"/>

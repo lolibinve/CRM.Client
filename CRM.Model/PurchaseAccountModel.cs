@@ -143,7 +143,7 @@ namespace CRM.Model
         public string AccountName { get; set; }
 
         [DataMember(Name = "amount")]
-        public long Amount { get; set; }
+        public decimal Amount { get; set; }
 
         [DataMember(Name = "type")]
         public int Type { get; set; }

@@ -1,4 +1,4 @@
-﻿using Caliburn.Micro;
+using Caliburn.Micro;
 using CRM.Model;
 using CRM.Modular.Models;
 using HttpLib;
@@ -18,6 +18,7 @@ namespace CRM.Modular.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class AddRoleViewModel : Screen
     {
+        private bool _isSubmitting;
 
         public RoleData role { set; get; } = new RoleData();
         public bool IsAdmin { set; get; }
@@ -49,17 +50,31 @@ namespace CRM.Modular.ViewModels
 
         public async void Sure()
         {
-            role.Admin = IsAdmin == true ? 1 : 0;
-            var result = await CRMRequest.ModifyRole(role);
-            if (result != null)
+            if (_isSubmitting)
             {
-                role.Clone(result);
-                var temp = this.GetView();
-                if (temp is Window win)
+                return;
+            }
+
+            role.Admin = IsAdmin == true ? 1 : 0;
+            _isSubmitting = true;
+            try
+            {
+                var result = await CRMRequest.ModifyRole(role);
+                if (result != null)
                 {
-                    win.DialogResult = true;
+                    role.Clone(result);
+                    var temp = this.GetView();
+                    if (temp is Window win)
+                    {
+                        win.DialogResult = true;
+                    }
+
+                    await TryCloseAsync();
                 }
-                await TryCloseAsync();
+            }
+            finally
+            {
+                _isSubmitting = false;
             }
         }
 

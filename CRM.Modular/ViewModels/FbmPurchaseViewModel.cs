@@ -15,7 +15,8 @@ using System.Windows.Controls;
 namespace CRM.Modular.ViewModels
 {
     /// <summary>
-    /// FBM 采购列表：筛选、分页、对接 <c>fbmList</c>；不提供行内修改（仅新增/删除）。
+    /// FBM 采购列表：筛选、分页、对接 <c>fbmList</c>；业务员筛选仅管理员可见，非管理员按当前登录账号过滤；
+    /// 双击行打开编辑弹窗（<c>fbmEdit</c>），另支持新增/删除。
     /// </summary>
     [AddINotifyPropertyChangedInterface]
     public class FbmPurchaseViewModel : Screen
@@ -40,6 +41,9 @@ namespace CRM.Modular.ViewModels
         public string SelectedFilterAccount { get; set; }
 
         public bool IsAdmin { get; set; }
+
+        /// <summary><c>fbmList</c> 返回的 <c>sumAmount</c>：当前筛选条件下采购金额合计（元，可含小数）。</summary>
+        public decimal SumAmount { get; set; }
 
         public BindableCollection<FbmPurchaseRecordModel> RecordLst { get; set; } = new BindableCollection<FbmPurchaseRecordModel>();
 
@@ -135,22 +139,14 @@ namespace CRM.Modular.ViewModels
             IsProgressIndeterminate = true;
             try
             {
-                var buyerName = SelectRole?.Name;
-                if (SelectRole == null)
+                var buyerName = "";
+                if (!IsAdmin)
                 {
-                    var info = IoC.Get<CacheInfo>();
-                    if (!info.IsAdmin)
-                    {
-                        buyerName = info.LoginAccount;
-                    }
-                    else
-                    {
-                        buyerName = "";
-                    }
+                    buyerName = (IoC.Get<CacheInfo>().LoginAccount ?? "").Trim();
                 }
-                else if (buyerName == "全部")
+                else if (SelectRole != null && SelectRole.Name != "全部")
                 {
-                    buyerName = "";
+                    buyerName = (SelectRole.Name ?? "").Trim();
                 }
 
                 var purchaseAccount = string.IsNullOrEmpty(SelectedFilterAccount) || SelectedFilterAccount == "全部"
@@ -169,6 +165,7 @@ namespace CRM.Modular.ViewModels
                 if (result != null)
                 {
                     RecordLst = new BindableCollection<FbmPurchaseRecordModel>(result.List ?? new List<FbmPurchaseRecordModel>());
+                    SumAmount = result.SumAmount;
                     var pages = (int)Math.Ceiling((result.Count * 1.0) / PageSizeConst);
                     PageInfo = new PageInfoModel
                     {
@@ -181,6 +178,7 @@ namespace CRM.Modular.ViewModels
                 else
                 {
                     RecordLst = new BindableCollection<FbmPurchaseRecordModel>();
+                    SumAmount = 0;
                     PageInfo = new PageInfoModel
                     {
                         Total = 0,
@@ -199,6 +197,22 @@ namespace CRM.Modular.ViewModels
         public async void Add()
         {
             var vm = new AddFbmPurchaseViewModel(null, false);
+            var ok = await windowManager.ShowDialogAsync(vm);
+            if (ok == true)
+            {
+                await QueryBase(PageInfo?.PageNum ?? 1);
+            }
+        }
+
+        /// <summary>双击列表行：打开修改弹窗。</summary>
+        public async void Edit()
+        {
+            if (SelectItem == null || SelectItem.Id <= 0)
+            {
+                return;
+            }
+
+            var vm = new AddFbmPurchaseViewModel(SelectItem, true);
             var ok = await windowManager.ShowDialogAsync(vm);
             if (ok == true)
             {

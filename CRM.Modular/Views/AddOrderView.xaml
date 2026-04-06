@@ -101,10 +101,10 @@
         <TextBox Grid.Column="4" Grid.Row="2" Text="{Binding order.Cost}" IsReadOnly="True" VerticalAlignment="Center" Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}" />
 
         <TextBlock Text="运费（¥）:" Grid.Row="3"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="3" Text="{Binding order.TransExpense}" IsEnabled="{Binding TransExpenseIsEnable}" VerticalAlignment="Center"  Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}"/>
+        <TextBox Grid.Column="4" Grid.Row="3" Text="{Binding order.TransExpense, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding TransExpenseIsEnable}" VerticalAlignment="Center"  Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}"/>
 
         <TextBlock Text="退款（¥）:" Grid.Row="4"  Grid.Column="3"/>
-        <TextBox Grid.Column="4" Grid.Row="4" Text="{Binding order.BackAmount}" VerticalAlignment="Center"  Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}"/>
+        <TextBox Grid.Column="4" Grid.Row="4" Text="{Binding order.BackAmount, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" VerticalAlignment="Center"  Margin="10,0,0,0" Style="{StaticResource MaterialDesignTextBox}"/>
 
         <TextBlock Text="利润（¥）:" Grid.Row="5"  Grid.Column="3"/>
         <TextBox Grid.Column="4" Grid.Row="5" Text="{Binding order.Profit,StringFormat={}{0:F2}}" IsReadOnly="True"/>
@@ -123,12 +123,17 @@
 
         <TextBlock Text="采购批次:" Grid.Row="10" Grid.Column="0"
                    Visibility="{Binding ShowPurIdRow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <ComboBox Grid.Column="1" Grid.Row="10" Grid.ColumnSpan="4" Margin="10,0,0,0" VerticalAlignment="Center"
+                  ItemsSource="{Binding StockPurIdOptions}"
+                  SelectedItem="{Binding SelectedStockPurId, Mode=TwoWay}"
+                  IsEnabled="{Binding CanEditStockPurchaseFields}"
+                  Visibility="{Binding ShowPurIdStockComboRow, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  cm:Message.Attach="[Event SelectionChanged] = [Action OnStockPurIdChanged]"/>
         <TextBox Grid.Column="1" Grid.Row="10" Grid.ColumnSpan="4"
                  Text="{Binding order.PurId, UpdateSourceTrigger=PropertyChanged}"
-                 IsReadOnly="{Binding StockPurchaseLocked}"
-                 Visibility="{Binding ShowPurIdTextRow, Converter={StaticResource BooleanToVisibilityConverter}}"
-                 cm:Message.Attach="[Event LostFocus] = [Action OnPurIdLostFocus]"/>
-        <ComboBox Grid.Column="1" Grid.Row="10" Grid.ColumnSpan="4" Margin="10,4,0,4" Height="46" VerticalAlignment="Center"
+                 IsReadOnly="True"
+                 Visibility="{Binding ShowPurIdStockLockedRow, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        <ComboBox Grid.Column="1" Grid.Row="10" Grid.ColumnSpan="4" Margin="10,0,0,0" VerticalAlignment="Center"
                   ItemsSource="{Binding DeadstockPurIdOptions}"
                   SelectedItem="{Binding SelectedDeadstockPurId, Mode=TwoWay}"
                   IsEnabled="{Binding CanEditStockPurchaseFields}"

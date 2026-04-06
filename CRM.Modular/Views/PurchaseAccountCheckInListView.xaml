@@ -78,7 +78,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn Header="账户名称" Width="160" Binding="{Binding AccountName}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="存入金额" Width="120" Binding="{Binding Amount}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="存入金额" Width="120" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="资金类型" Width="120" Binding="{Binding TypeDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="存入时间" Width="170" Binding="{Binding AddTimeDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="备注" Width="*" Binding="{Binding Remark}" ElementStyle="{x:Null}"/>

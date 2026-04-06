@@ -23,6 +23,8 @@ namespace CRM.Modular.ViewModels
     [AddINotifyPropertyChangedInterface]
     public class AddFbmPurchaseViewModel : Screen
     {
+        private bool _isSubmitting;
+
         public List<PaymentPickItem> PaymentItems { get; } = new List<PaymentPickItem>
         {
             new PaymentPickItem { Value = 0, Display = "现金支付" },
@@ -79,6 +81,11 @@ namespace CRM.Modular.ViewModels
 
         public async void Sure()
         {
+            if (_isSubmitting)
+            {
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(Record.OrderId))
             {
                 MessageBox.Show("请填写订单号");
@@ -102,19 +109,27 @@ namespace CRM.Modular.ViewModels
                 Record.Payment = SelectedPayment.Value;
             }
 
-            var ok = await CRMRequest.FbmPurchaseEdit(Record);
-            if (!ok)
+            _isSubmitting = true;
+            try
             {
-                return;
-            }
+                var ok = await CRMRequest.FbmPurchaseEdit(Record);
+                if (!ok)
+                {
+                    return;
+                }
 
-            var temp = GetView();
-            if (temp is Window win)
+                var temp = GetView();
+                if (temp is Window win)
+                {
+                    win.DialogResult = true;
+                }
+
+                await TryCloseAsync();
+            }
+            finally
             {
-                win.DialogResult = true;
+                _isSubmitting = false;
             }
-
-            await TryCloseAsync();
         }
 
         public Task CloseForm()
