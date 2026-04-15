@@ -1,5 +1,6 @@
 using Caliburn.Micro;
 using CRM.Model;
+using CRM.Modular.Models;
 using HttpLib;
 using PropertyChanged;
 using System;
@@ -92,7 +93,8 @@ namespace CRM.Modular.ViewModels
             _isSubmitting = true;
             try
             {
-                var ok = await CRMRequest.PurchaseAccountCheckIn(AccountId, amount, _fundType, Remark);
+                var loginUser = IoC.Get<CacheInfo>()?.LoginAccount;
+                var ok = await CRMRequest.PurchaseAccountCheckIn(AccountId, amount, _fundType, Remark, loginUser);
                 if (!ok)
                 {
                     return;

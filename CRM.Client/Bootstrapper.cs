@@ -2,9 +2,11 @@ using Caliburn.Micro;
 using CRM.Client.ViewModels;
 using CRM.Modular.Models;
 using CRM.Modular.ViewModels;
+using HttpLib;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -69,6 +71,71 @@ namespace CRM.Client
 
             container.PerRequest<StockPurchaseViewModel>();
             container.PerRequest<AddStockPurchaseViewModel>();
+
+            SessionAccessDenied.AccessDenied += OnSessionAccessDenied;
+        }
+
+        private void OnSessionAccessDenied()
+        {
+            var app = Application.Current;
+            if (app == null)
+            {
+                SessionAccessDenied.ResetGate();
+                return;
+            }
+
+            app.Dispatcher.BeginInvoke(new System.Action(HandleSessionExpiredRestartApp));
+        }
+
+        /// <summary>
+        /// 登录失效：提示后结束当前进程并启动新进程（重新出现登录界面），避免在同进程内换 Cookie/窗口。
+        /// </summary>
+        private void HandleSessionExpiredRestartApp()
+        {
+            try
+            {
+                var app = Application.Current;
+                if (app == null)
+                {
+                    return;
+                }
+
+                bool hasShell = app.Windows.Cast<Window>().Any(w => w.GetType().Name == "ShellView");
+                if (!hasShell)
+                {
+                    SessionAccessDenied.ResetGate();
+                    return;
+                }
+
+                MessageBox.Show("登录已失效，请重新登录。", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                string path = Assembly.GetEntryAssembly()?.Location;
+                if (string.IsNullOrEmpty(path))
+                {
+                    MessageBox.Show("无法定位程序路径，请手动重新启动应用程序。", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Application.Current.Shutdown(0);
+                    return;
+                }
+
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = path,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("无法自动重新启动：" + ex.Message + "\n请手动重新打开程序。", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+
+                Application.Current.Shutdown(0);
+            }
+            finally
+            {
+                SessionAccessDenied.ResetGate();
+            }
         }
 
         protected override IEnumerable<Assembly> SelectAssemblies()

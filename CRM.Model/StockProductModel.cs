@@ -14,6 +14,10 @@ namespace CRM.Model
         [DataMember(Name = "count")]
         public int Count { get; set; }
 
+        /// <summary>剩余库存总计，对应接口 <c>sum</c>。</summary>
+        [DataMember(Name = "sum")]
+        public decimal Sum { get; set; }
+
         [DataMember(Name = "list")]
         public List<StockProductRecordModel> List { get; set; }
     }
@@ -59,6 +63,18 @@ namespace CRM.Model
         /// <summary>累计采购数量。</summary>
         [DataMember(Name = "pSum")]
         public decimal? SumCount { get; set; }
+
+        /// <summary>剩余库存资金，对应列表接口 <c>sumExpense</c>。</summary>
+        [DataMember(Name = "sumExpense")]
+        public decimal? SumExpense { get; set; }
+
+        /// <summary>
+        /// 未售罄批次已售出数量（<c>staySum</c>）：<c>pSum - sellOut - inTrans - inStock - unsaleable</c>，由客户端根据接口字段计算，不参与序列化。
+        /// </summary>
+        [IgnoreDataMember]
+        [DependsOn(nameof(SumCount), nameof(SellOut), nameof(TransitStock), nameof(WarehouseStock), nameof(DeadStock))]
+        public decimal StaySum =>
+            (SumCount ?? 0) - (SellOut ?? 0) - (TransitStock ?? 0) - (WarehouseStock ?? 0) - (DeadStock ?? 0);
 
         /// <summary>列表勾选（仅 UI，不参与接口序列化）。</summary>
         [DataMember(IsRequired = false)]

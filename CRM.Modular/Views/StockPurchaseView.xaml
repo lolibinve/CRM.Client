@@ -53,7 +53,9 @@
 
             <Button x:Name="Query" Width="88" Height="35" Content="查询" Margin="10,0,0,0"/>
             <Button x:Name="Add" Width="88" Height="35" Content="新增" Margin="10,0,0,0"/>
-            <Button x:Name="Delete" Width="88" Height="35" Content="删除" Margin="10,0,0,0"/>
+            <Button x:Name="Delete" Width="88" Height="35" Content="删除" Margin="10,0,0,0"
+                    Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    IsEnabled="{Binding CanDeleteStockPurchase}"/>
         </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
@@ -132,16 +134,14 @@
                 <DataGridTextColumn Header="采购批次" Width="130" Binding="{Binding PurId}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="产品编码" Width="120" Binding="{Binding ProductCode}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="产品名称" Width="180" Binding="{Binding ProductName}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="数量" Width="80" Binding="{Binding Quantity}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="采购数量" Width="88" Binding="{Binding Quantity}" ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="剩余数量" Width="88" Binding="{Binding StayQuantity}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="采购金额" Width="100" Binding="{Binding ExpenseYuanDisplay}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="单件采购成本" Width="120" Binding="{Binding ListUnitPurchaseCostDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="头程运费" Width="100" Binding="{Binding TransFeeYuanDisplay}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="单件头程" Width="88" Binding="{Binding ListUnitTransFeeDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="合计成本(单件)" Width="130" Binding="{Binding ListTotalUnitCostDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="支付" Width="90" Binding="{Binding PaymentDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="采购账号" Width="120" Binding="{Binding PurchaseAccount}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="业务员" Width="88" Binding="{Binding UserName}" ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="货件状态" Width="96" Binding="{Binding ShipmentTypeDisplay}" ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="到仓时间" Width="150"
                                     Binding="{Binding InstockDateTime, StringFormat='{}{0:yyyy-MM-dd}', TargetNullValue=''}"
                                     ElementStyle="{x:Null}"/>

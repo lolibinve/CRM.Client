@@ -151,6 +151,10 @@ namespace CRM.Model
         [DataMember(Name = "addTime")]
         public object AddTimeToken { get; set; }
 
+        /// <summary>操作人（后端字段 <c>user</c>）。</summary>
+        [DataMember(Name = "user")]
+        public string User { get; set; }
+
         [DataMember(Name = "remark")]
         public string Remark { get; set; }
 

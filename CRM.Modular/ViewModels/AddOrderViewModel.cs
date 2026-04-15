@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace CRM.Modular.ViewModels
 {
@@ -55,7 +56,9 @@ namespace CRM.Modular.ViewModels
         public bool ShowPurIdComboRow => SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Deadstock;
 
         [DependsOn(nameof(SelectedPurchaseMethod))]
-        public bool ShowShipQtyRow => SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Stock;
+        public bool ShowShipQtyRow =>
+            SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Stock
+            || SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Deadstock;
 
         public BindableCollection<string> StockPurIdOptions { get; set; } = new BindableCollection<string>();
 
@@ -73,6 +76,9 @@ namespace CRM.Modular.ViewModels
 
         private readonly bool _isModify;
         private readonly int _originalPurchaseMethod;
+
+        /// <summary>修改订单：异步初始化完成后的订单快照，用于判断是否与提交前一致（一致则不调用后端）。</summary>
+        private OrderData _modifyBaselineOrder;
 
         /// <summary>修改订单且原始数据中采购批次、发货数量均已有值时，锁定采购方式/采购批次/发货数量。</summary>
         public bool StockPurchaseLocked { get; }
@@ -182,48 +188,169 @@ namespace CRM.Modular.ViewModels
         private async Task InitAfterLoadAsync()
         {
             await Task.Yield();
-            if (SelectedPurchaseMethod == null || SelectedPurchaseMethod.Value <= (int)OrderPurchaseMethod.Unselected)
+            try
             {
-                _suppressPurchaseMethodChange = false;
-                return;
-            }
+                if (SelectedPurchaseMethod == null || SelectedPurchaseMethod.Value <= (int)OrderPurchaseMethod.Unselected)
+                {
+                    _suppressPurchaseMethodChange = false;
+                    return;
+                }
 
-            // 采购方式只读时不调 FBM / stockInfo / 滞留批次列表等接口，保留服务端已回显的成本与批次信息。
-            if (StockPurchaseLocked)
+                // 采购方式只读时不调 FBM / stockInfo / 滞留批次列表等接口，保留服务端已回显的成本与批次信息。
+                // 仍需 HydratePurchaseMethodEchoUiOnly：用已有 order.PurId 填充采购批次下拉（滞销库存等），不请求后端。
+                if (StockPurchaseLocked)
+                {
+                    order.PurchaseMethod = SelectedPurchaseMethod.Value;
+                    HydratePurchaseMethodEchoUiOnly();
+                    _suppressPurchaseMethodChange = false;
+                    return;
+                }
+
+                // 回显阶段不调 FBM / 批次列表 / stockInfo；仅用户操作采购方式下拉后再走 RefreshPurchaseMethodLogic 请求后端。
+                order.PurchaseMethod = SelectedPurchaseMethod.Value;
+                HydratePurchaseMethodEchoUiOnly();
+
+                if (Application.Current?.Dispatcher != null)
+                {
+                    await Application.Current.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+                }
+
+                _suppressPurchaseMethodChange = false;
+            }
+            finally
             {
-                _suppressPurchaseMethodChange = false;
-                return;
+                if (_isModify)
+                {
+                    _modifyBaselineOrder = new OrderData();
+                    _modifyBaselineOrder.Clone(order);
+                }
             }
+        }
 
-            order.PurchaseMethod = SelectedPurchaseMethod.Value;
+        /// <summary>
+        /// 修改订单打开时回显：仅根据已有 <see cref="OrderData"/> 填充下拉与利润，不请求后端。
+        /// 采购方式相关接口仅在用户 <see cref="RefreshPurchaseMethodLogic"/> 变更下拉后触发。
+        /// </summary>
+        private void HydratePurchaseMethodEchoUiOnly()
+        {
             switch ((OrderPurchaseMethod)SelectedPurchaseMethod.Value)
             {
                 case OrderPurchaseMethod.Cash:
-                    await LoadFbmCostAsync();
+                    RecalculateProfit();
                     break;
                 case OrderPurchaseMethod.Stock:
-                    await LoadStockTypePurIdOptionsAsync(1);
-                    await RefreshStockInfoAsync();
+                    StayQuantityHint = "";
+                    _cachedStayQty = 0;
+                    _cachedUnitCost = 0;
+                    _stockInfoLoaded = false;
+                    HydratePurIdComboForEcho(stockType: 1);
                     RecalculateProfit();
                     break;
                 case OrderPurchaseMethod.Deadstock:
-                    order.Cost = DefaultCostResellOrDeadstock;
-                    // 回显“滞留库存”时需要先拉取下拉项，否则 ComboBox 可能为空且无法选中当前 purId。
-                    await LoadStockTypePurIdOptionsAsync(2);
-                    await RefreshStockInfoAsync();
+                    StayQuantityHint = "";
+                    _cachedStayQty = 0;
+                    _cachedUnitCost = 0;
+                    _stockInfoLoaded = false;
+                    HydratePurIdComboForEcho(stockType: 2);
                     RecalculateProfit();
                     break;
                 case OrderPurchaseMethod.ResellReturn:
-                    order.PurId = "";
-                    order.ShipQuantity = 0;
-                    order.Cost = DefaultCostResellOrDeadstock;
                     SelectedStockPurId = null;
                     SelectedDeadstockPurId = null;
                     RecalculateProfit();
                     break;
             }
+        }
 
-            _suppressPurchaseMethodChange = false;
+        /// <param name="stockType">1=备货；2=滞留库存</param>
+        private void HydratePurIdComboForEcho(int stockType)
+        {
+            var options = new BindableCollection<string> { PurIdSelectPlaceholder };
+            var pid = (order.PurId ?? "").Trim();
+            if (!string.IsNullOrWhiteSpace(pid) && !string.Equals(pid, PurIdSelectPlaceholder, StringComparison.Ordinal))
+            {
+                if (!options.Any(x => string.Equals(x, pid, StringComparison.OrdinalIgnoreCase)))
+                {
+                    options.Add(pid);
+                }
+            }
+
+            if (stockType == 1)
+            {
+                StockPurIdOptions = options;
+                if (string.IsNullOrWhiteSpace(pid) || string.Equals(pid, PurIdSelectPlaceholder, StringComparison.Ordinal))
+                {
+                    SelectedStockPurId = PurIdSelectPlaceholder;
+                }
+                else
+                {
+                    var matched = options.FirstOrDefault(x => string.Equals(x, pid, StringComparison.OrdinalIgnoreCase));
+                    SelectedStockPurId = matched ?? PurIdSelectPlaceholder;
+                    if (matched != null && !string.Equals(order.PurId, matched, StringComparison.Ordinal))
+                    {
+                        order.PurId = matched;
+                    }
+                }
+            }
+            else if (stockType == 2)
+            {
+                DeadstockPurIdOptions = options;
+                if (string.IsNullOrWhiteSpace(pid) || string.Equals(pid, PurIdSelectPlaceholder, StringComparison.Ordinal))
+                {
+                    SelectedDeadstockPurId = PurIdSelectPlaceholder;
+                }
+                else
+                {
+                    var matched = options.FirstOrDefault(x => string.Equals(x, pid, StringComparison.OrdinalIgnoreCase));
+                    SelectedDeadstockPurId = matched ?? PurIdSelectPlaceholder;
+                    if (matched != null && !string.Equals(order.PurId, matched, StringComparison.Ordinal))
+                    {
+                        order.PurId = matched;
+                    }
+                }
+            }
+        }
+
+        private static bool FloatEq(float x, float y) => Math.Abs(x - y) < 0.0001f;
+
+        /// <summary>与 <see cref="CRMRequest.AddOrder"/> 提交字段一致的数据是否相对基线无变化。</summary>
+        private static bool OrderMatchesModifyBaseline(OrderData current, OrderData baseline)
+        {
+            if (current == null || baseline == null)
+            {
+                return false;
+            }
+
+            return current.Id == baseline.Id
+                && string.Equals(current.Store ?? "", baseline.Store ?? "", StringComparison.Ordinal)
+                && Nullable.Equals(current.SaleDate, baseline.SaleDate)
+                && string.Equals(current.OrderNumber ?? "", baseline.OrderNumber ?? "", StringComparison.Ordinal)
+                && string.Equals(current.SKU ?? "", baseline.SKU ?? "", StringComparison.Ordinal)
+                && string.Equals(current.Account ?? "", baseline.Account ?? "", StringComparison.Ordinal)
+                && string.Equals(current.Country ?? "", baseline.Country ?? "", StringComparison.Ordinal)
+                && string.Equals(current.MoneyType ?? "", baseline.MoneyType ?? "", StringComparison.Ordinal)
+                && string.Equals(current.ImageBase64Str ?? "", baseline.ImageBase64Str ?? "", StringComparison.Ordinal)
+                && FloatEq(current.SettleAmount, baseline.SettleAmount)
+                && FloatEq(current.ExchangeRafe, baseline.ExchangeRafe)
+                && FloatEq(current.ExchangeAmount, baseline.ExchangeAmount)
+                && FloatEq(current.BackExchange, baseline.BackExchange)
+                && FloatEq(current.SalesVolume, baseline.SalesVolume)
+                && FloatEq(current.Cost, baseline.Cost)
+                && FloatEq(current.TransExpense, baseline.TransExpense)
+                && FloatEq(current.BackAmount, baseline.BackAmount)
+                && FloatEq(current.Profit, baseline.Profit)
+                && FloatEq(current.ProfitRate, baseline.ProfitRate)
+                && current.State == baseline.State
+                && current.IsImport == baseline.IsImport
+                && current.IsImageUrl == baseline.IsImageUrl
+                && string.Equals(current.Remark ?? "", baseline.Remark ?? "", StringComparison.Ordinal)
+                && string.Equals(current.Buyer ?? "", baseline.Buyer ?? "", StringComparison.Ordinal)
+                && string.Equals(current.Phone ?? "", baseline.Phone ?? "", StringComparison.Ordinal)
+                && string.Equals(current.QuantityPurchased ?? "", baseline.QuantityPurchased ?? "", StringComparison.Ordinal)
+                && current.PurchaseMethod == baseline.PurchaseMethod
+                && string.Equals((current.PurId ?? "").Trim(), (baseline.PurId ?? "").Trim(), StringComparison.Ordinal)
+                && current.ShipQuantity == baseline.ShipQuantity
+                && current.IsCheck == baseline.IsCheck;
         }
 
         public async void RefreshPurchaseMethodLogic()
@@ -295,9 +422,10 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
-            if (SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Stock)
+            if (SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Stock
+                || SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Deadstock)
             {
-                // 若切到“使用备货”后还没加载过 stockInfo，但 PurId 已有值，则在用户输入发货数量时补拉一次，
+                // 若切到备货/滞销后还没加载过 stockInfo，但 PurId 已有值，则在用户输入发货数量时补拉一次，
                 // 避免成本/库存校验因未加载接口数据而失效。
                 if (!_stockInfoLoaded && !string.IsNullOrWhiteSpace(order.PurId))
                 {
@@ -307,13 +435,29 @@ namespace CRM.Modular.ViewModels
                 if (_stockInfoLoaded && _cachedStayQty >= 0 && order.ShipQuantity > _cachedStayQty)
                 {
                     MessageBox.Show("库存不足");
-                    order.Cost = 0;
+                    if (SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Deadstock)
+                    {
+                        order.Cost = DefaultCostResellOrDeadstock;
+                    }
+                    else
+                    {
+                        order.Cost = 0;
+                    }
+
                     RecalculateProfit();
                     return;
                 }
 
-                ApplyStockCostFromInputs();
-                RecalculateProfit();
+                if (SelectedPurchaseMethod?.Value == (int)OrderPurchaseMethod.Deadstock)
+                {
+                    order.Cost = DefaultCostResellOrDeadstock;
+                    RecalculateProfit();
+                }
+                else
+                {
+                    ApplyStockCostFromInputs();
+                    RecalculateProfit();
+                }
             }
         }
 
@@ -397,23 +541,18 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
-            // 滞留库存：不调用 stockInfoByPurId，仅按默认成本维护界面。
-            if (SelectedPurchaseMethod.Value == (int)OrderPurchaseMethod.Deadstock)
-            {
-                StayQuantityHint = "";
-                _cachedStayQty = 0;
-                _cachedUnitCost = 0;
-                _stockInfoLoaded = false;
-                order.Cost = DefaultCostResellOrDeadstock;
-                RecalculateProfit();
-                return;
-            }
-
-            // 使用备货：按采购批次拉取库存与单价
             if (string.IsNullOrWhiteSpace(order.PurId))
             {
                 StayQuantityHint = "";
-                order.Cost = 0f;
+                if (SelectedPurchaseMethod.Value == (int)OrderPurchaseMethod.Stock)
+                {
+                    order.Cost = 0f;
+                }
+                else
+                {
+                    order.Cost = DefaultCostResellOrDeadstock;
+                }
+
                 _cachedStayQty = 0;
                 _cachedUnitCost = 0;
                 _stockInfoLoaded = false;
@@ -421,12 +560,19 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
+            var isDeadstock = SelectedPurchaseMethod.Value == (int)OrderPurchaseMethod.Deadstock;
             var info = await CRMRequest.StockInfoByPurId(order.PurId);
             if (info == null)
             {
                 _cachedStayQty = 0;
                 _cachedUnitCost = 0;
                 _stockInfoLoaded = false;
+                if (isDeadstock)
+                {
+                    order.Cost = DefaultCostResellOrDeadstock;
+                    RecalculateProfit();
+                }
+
                 return;
             }
 
@@ -438,7 +584,22 @@ namespace CRM.Modular.ViewModels
             if (order.ShipQuantity > _cachedStayQty)
             {
                 MessageBox.Show("库存不足");
-                order.Cost = 0;
+                if (isDeadstock)
+                {
+                    order.Cost = DefaultCostResellOrDeadstock;
+                }
+                else
+                {
+                    order.Cost = 0;
+                }
+
+                RecalculateProfit();
+                return;
+            }
+
+            if (isDeadstock)
+            {
+                order.Cost = DefaultCostResellOrDeadstock;
                 RecalculateProfit();
                 return;
             }
@@ -474,7 +635,8 @@ namespace CRM.Modular.ViewModels
 
             options.Add(PurIdSelectPlaceholder);
 
-            var list = await CRMRequest.StockTypePurIdList(type);
+            var loginAccount = IoC.Get<CacheInfo>()?.LoginAccount;
+            var list = await CRMRequest.StockTypePurIdList(type, loginAccount);
             if (list != null)
             {
                 foreach (var item in list.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct())
@@ -566,6 +728,22 @@ namespace CRM.Modular.ViewModels
 
                 order.PurchaseMethod = SelectedPurchaseMethod.Value;
 
+                // 必须在下面 switch 之前判断：switch 会拉库存、重算成本等，会改 order 并在备货场景先请求后端。
+                if (_isModify
+                    && _modifyBaselineOrder != null
+                    && OrderMatchesModifyBaseline(order, _modifyBaselineOrder))
+                {
+                    // 未调用后端，按「取消」关闭，父窗口通常只对 true 做列表刷新。
+                    var viewNoOp = GetView();
+                    if (viewNoOp is Window winNoOp)
+                    {
+                        winNoOp.DialogResult = false;
+                    }
+
+                    await TryCloseAsync();
+                    return;
+                }
+
                 switch ((OrderPurchaseMethod)SelectedPurchaseMethod.Value)
                 {
                     case OrderPurchaseMethod.Cash:
@@ -603,6 +781,26 @@ namespace CRM.Modular.ViewModels
                         if (string.IsNullOrWhiteSpace(order.PurId))
                         {
                             MessageBox.Show("请选择采购批次");
+                            return;
+                        }
+
+                        if (order.ShipQuantity <= 0)
+                        {
+                            MessageBox.Show("请填写发货数量");
+                            return;
+                        }
+
+                        if (StockPurchaseLocked)
+                        {
+                            order.Cost = DefaultCostResellOrDeadstock;
+                            RecalculateProfit();
+                            break;
+                        }
+
+                        await RefreshStockInfoAsync();
+                        if (order.ShipQuantity > _cachedStayQty)
+                        {
+                            MessageBox.Show("库存不足");
                             return;
                         }
 

@@ -31,25 +31,110 @@ namespace HttpLib
                 {"psw",password},
             };
 
-            HttpResult result = await CRMHttpClient.GetAsync($"crm/login", parameters, cts: cts);
-            if (result.IsSuccess)
+            DependencyInjectionHelper.CurrentSessionId = null;
+
+            try
             {
-                var response = JsonHelper.DeserializeObject<CRMHttpResponse<int?>>(result.Content);
-                if (response.State == 0)
+                HttpResult result = await CRMHttpClient.GetAsync($"crm/login", parameters, cts: cts);
+                if (result.IsSuccess)
                 {
-                    return response.Value;
+                    LoginApiResponse response;
+                    try
+                    {
+                        response = JsonHelper.DeserializeObject<LoginApiResponse>(result.Content ?? "");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(
+                            $"无法解析登录响应。\n{ex.Message}\n\n--- 响应原文 ---\n{TruncateForMessage(result.Content)}",
+                            "登录失败",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return null;
+                    }
+
+                    if (response == null)
+                    {
+                        MessageBox.Show("登录响应为空。", "登录失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return null;
+                    }
+
+                    if (response.Code == 0)
+                    {
+                        if (response.Data != null)
+                        {
+                            DependencyInjectionHelper.CurrentSessionId = response.Data.SessionId;
+                            return response.Data.Admin;
+                        }
+
+                        MessageBox.Show(
+                            "登录响应缺少 data 字段。\n\n--- 响应原文 ---\n" + TruncateForMessage(result.Content),
+                            "登录失败",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                        return null;
+                    }
+
+                    MessageBox.Show(
+                        $"登录失败\n错误码：{response.Code}\n{response.Message ?? ""}",
+                        "登录失败",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return null;
                 }
-                else
-                {
-                    MessageBox.Show(response.Desc);
-                }
+
+                MessageBox.Show(BuildLoginHttpErrorDetail(result), "登录失败", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show(result.ErrorMessage());
+                MessageBox.Show(
+                    $"请求登录接口时发生异常。\n{ex.GetInnerMessage()}",
+                    "登录失败",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
 
             return null;
+        }
+
+        private static string TruncateForMessage(string text, int maxLen = 4000)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return "(空)";
+            }
+
+            return text.Length <= maxLen ? text : text.Substring(0, maxLen) + "\n…(已截断)";
+        }
+
+        private static string BuildLoginHttpErrorDetail(HttpResult result)
+        {
+            if (result == null)
+            {
+                return "未知错误（无响应对象）。";
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"HTTP {(int)result.StatusCode} {result.StatusCode}");
+
+            if (result.Exception != null)
+            {
+                sb.AppendLine(result.Exception.GetInnerMessage());
+            }
+
+            var body = !string.IsNullOrWhiteSpace(result.Message) ? result.Message : result.Content;
+            if (!string.IsNullOrWhiteSpace(body))
+            {
+                sb.AppendLine();
+                sb.AppendLine("--- 响应内容 ---");
+                sb.Append(TruncateForMessage(body));
+            }
+            else if (result.Exception == null)
+            {
+                sb.AppendLine("(无响应正文)");
+            }
+
+            return sb.ToString().TrimEnd();
         }
 
         #region 角色
@@ -340,6 +425,45 @@ namespace HttpLib
 
         #region 订单管理
 
+        /// <summary>
+        /// 接口字段 <c>purchaseId</c> 与 <see cref="OrderData.PurId"/> 名不一致，反序列化后从原始 JSON 补全。
+        /// </summary>
+        private static void ApplyOrderDataPurchaseIdFromJson(string jsonContent, OrderData order)
+        {
+            if (string.IsNullOrWhiteSpace(jsonContent) || order == null)
+            {
+                return;
+            }
+
+            var pid = JsonHelper.TryReadOrderPurchaseIdFromJson(jsonContent);
+            if (!string.IsNullOrEmpty(pid))
+            {
+                order.PurId = pid;
+            }
+        }
+
+        private static void PatchOrderListPurchaseIdsFromJson(string jsonContent, OrderModel model)
+        {
+            if (string.IsNullOrWhiteSpace(jsonContent) || model?.OrderDatalst == null || model.OrderDatalst.Count == 0)
+            {
+                return;
+            }
+
+            var ids = JsonHelper.TryReadOrderListPurchaseIdsFromJson(jsonContent);
+            if (ids == null || ids.Count != model.OrderDatalst.Count)
+            {
+                return;
+            }
+
+            for (int i = 0; i < ids.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(ids[i]))
+                {
+                    model.OrderDatalst[i].PurId = ids[i];
+                }
+            }
+        }
+
         public static async Task<OrderModel> GetOrderLst(string uname, DateTime? startDate, DateTime? endDate, string sku, string orderNumber, string country, string store, int pageNum = 1, int pageSize = 50, int status = -1)
         {
             var parameters = new Dictionary<string, string>()
@@ -362,6 +486,10 @@ namespace HttpLib
                 var response = JsonHelper.DeserializeObject<CRMHttpResponse<OrderModel>>(result.Content);
                 if (response.State == 0)
                 {
+                    if (response.Value != null)
+                    {
+                        PatchOrderListPurchaseIdsFromJson(result.Content, response.Value);
+                    }
 
                     return response.Value;
                 }
@@ -429,6 +557,10 @@ namespace HttpLib
                 var response = JsonHelper.DeserializeObject<CRMHttpResponse<OrderData>>(result.Content);
                 if (response.State == 0)
                 {
+                    if (response.Value != null)
+                    {
+                        ApplyOrderDataPurchaseIdFromJson(result.Content, response.Value);
+                    }
 
                     return response.Value;
                 }
@@ -693,7 +825,7 @@ namespace HttpLib
         /// </summary>
         public static async Task<bool> TaskPurchaseAccountBalance()
         {
-            HttpResult result = await CRMHttpClient.GetAsync($"crm/login/taskPurchaseAccountBalance", null);
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/login/taskPurchaseAccountBalance?token=meihaoshenghuo", null);
             if (result.IsSuccess)
             {
                 var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
@@ -825,10 +957,11 @@ namespace HttpLib
         }
 
         /// <summary>
-        /// 采购账号入账，GET <c>crm/purchase/accountCheckIn</c>（<c>PurchaseAccountCheckInRequest</c>：<c>id</c>、<c>amount</c>、<c>type</c>、<c>remark</c>）。
+        /// 采购账号入账，GET <c>crm/purchase/accountCheckIn</c>（<c>PurchaseAccountCheckInRequest</c>：<c>id</c>、<c>amount</c>、<c>type</c>、<c>remark</c>、<c>user</c>）。
+        /// 非空 <paramref name="user"/> 时增加 Query <c>user</c>（当前登录用户名）。
         /// 写入 <c>purchase_account_check_in</c> 并重算余额（异步）。
         /// </summary>
-        public static async Task<bool> PurchaseAccountCheckIn(int accountId, decimal amount, int type, string remark = null)
+        public static async Task<bool> PurchaseAccountCheckIn(int accountId, decimal amount, int type, string remark = null, string user = null)
         {
             if (accountId <= 0)
             {
@@ -856,6 +989,8 @@ namespace HttpLib
             };
             if (!string.IsNullOrWhiteSpace(remark))
                 parameters["remark"] = remark.Trim();
+            if (!string.IsNullOrWhiteSpace(user))
+                parameters["user"] = user.Trim();
 
             HttpResult result = await CRMHttpClient.GetAsync("crm/purchase/accountCheckIn", parameters);
             if (result.IsSuccess)
@@ -1063,7 +1198,7 @@ namespace HttpLib
         /// </summary>
         public static async Task<bool> TaskStockManageSummary()
         {
-            HttpResult result = await CRMHttpClient.GetAsync($"crm/login/taskStockManageSummary", null);
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/login/taskStockManageSummary?token=meihaoshenghuo", null);
             if (result.IsSuccess)
             {
                 var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
@@ -1084,7 +1219,7 @@ namespace HttpLib
 
         /// <summary>
         /// 备货汇总分页列表，GET <c>crm/purchase/stockManageList</c>。
-        /// 若提供 <paramref name="user"/>，增加 Query 参数 <c>user</c>。
+        /// 若提供非空 <paramref name="user"/>，增加 Query 参数 <c>user</c>（业务员账号：非管理员必传当前登录；管理员传空查全部，或传所选业务员以筛选）。
         /// </summary>
         public static async Task<StockProductListModel> StockManageList(int pageNum = 1, int pageSize = 20, string user = null)
         {
@@ -1121,7 +1256,7 @@ namespace HttpLib
         /// <summary>
         /// 备货汇总新增/编辑，GET <c>crm/purchase/stockManageEdit</c>（<c>pId</c>、<c>pName</c>）。
         /// 始终传 <c>id</c>：新增为 <c>0</c>，修改为实际主键。
-        /// 新增时若提供 <paramref name="loginAccountForUserParam"/>，额外传 Query <c>user</c>。
+        /// 新增（<c>id==0</c>）时始终传 Query <c>user</c>（当前登录账号，与是否管理员无关）；编辑不传 <c>user</c>。
         /// </summary>
         public static async Task<bool> StockManageEdit(StockProductRecordModel model, string loginAccountForUserParam = null)
         {
@@ -1149,9 +1284,9 @@ namespace HttpLib
                 {"pName", model.ProductName.Trim()},
             };
 
-            if (model.Id == 0 && !string.IsNullOrWhiteSpace(loginAccountForUserParam))
+            if (model.Id == 0)
             {
-                parameters["user"] = loginAccountForUserParam.Trim();
+                parameters["user"] = (loginAccountForUserParam ?? "").Trim();
             }
 
             HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockManageEdit", parameters);
@@ -1352,6 +1487,41 @@ namespace HttpLib
         }
 
         /// <summary>
+        /// 到仓打回在途：GET <c>crm/purchase/stockBackType</c>，Query 参数 <c>id</c>。
+        /// </summary>
+        public static async Task<bool> StockBackType(int id)
+        {
+            if (id <= 0)
+            {
+                MessageBox.Show("无效的记录 id。");
+                return false;
+            }
+
+            var parameters = new Dictionary<string, string>()
+            {
+                {"id", id.ToString(CultureInfo.InvariantCulture)},
+            };
+
+            HttpResult result = await CRMHttpClient.GetAsync($"crm/purchase/stockBackType", parameters);
+            if (result.IsSuccess)
+            {
+                var response = JsonHelper.DeserializeObject<CRMHttpResponse<object>>(result.Content);
+                if (response.State == 0)
+                {
+                    return true;
+                }
+
+                MessageBox.Show(response.Desc ?? "打回在途失败");
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage());
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// 按订单号查 FBM 现金采购，GET <c>crm/purchase/fbmInfoByOrderId</c>。
         /// 成功 <c>data</c> 为单条 <c>PurchaseRecordFbm</c>（<c>expense</c> 为采购金额）；见 <c>PurchaseController-API(3).md</c> §15。
         /// </summary>
@@ -1416,11 +1586,17 @@ namespace HttpLib
         /// <summary>
         /// 备货/滞销库存采购批次列表，GET <c>crm/purchase/stockTypePurIdList</c>。
         /// <paramref name="type"/>：1 备货库存，2 滞销库存。
+        /// 非空 <paramref name="user"/> 时增加 Query <c>user</c>（当前登录账号，与登录态一致）。
         /// 成功 <c>data</c> 为 <c>{ list: string[] }</c>。
         /// </summary>
-        public static async Task<List<string>> StockTypePurIdList(int type)
+        public static async Task<List<string>> StockTypePurIdList(int type, string user)
         {
-            var parameters = new Dictionary<string, string> { { "type", type.ToString() } };
+            var parameters = new Dictionary<string, string> { { "type", type.ToString(CultureInfo.InvariantCulture) } };
+            if (!string.IsNullOrWhiteSpace(user))
+            {
+                parameters["user"] = user.Trim();
+            }
+
             HttpResult result = await CRMHttpClient.GetAsync("crm/purchase/stockTypePurIdList", parameters);
             if (result.IsSuccess)
             {

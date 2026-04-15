@@ -1,4 +1,4 @@
-﻿using Caliburn.Micro;
+using Caliburn.Micro;
 using CLog;
 using CRM.Model;
 using CRM.Modular.Models;

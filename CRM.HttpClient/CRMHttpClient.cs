@@ -28,7 +28,7 @@ namespace HttpLib
             Dictionary<string, string> formDataStrDic = null, Dictionary<string, string> formDataFileDic = null, CancellationTokenSource cts = null,bool isStream = false)
         {
 #if DEBUG
-            //const string BaseUrl = "http://192.168.1.7:8080";
+            //const string BaseUrl = "http://192.168.1.4:8080";
            const string BaseUrl = "http://175.24.61.38:8080";
 
 #else
@@ -37,6 +37,7 @@ namespace HttpLib
             string absoluteUri = new Uri(BaseUrl).AbsoluteUri + relativeUri.TrimStart('/');
 
             HttpResult httpResult = new HttpResult();
+
 
             try
             {
@@ -62,6 +63,15 @@ namespace HttpLib
                                 httpResult.Content = await response.Content.ReadAsStringAsync();
                             }
 
+                            if (!isStream && !string.IsNullOrEmpty(httpResult.Content) &&
+                                CrmApiErrorCodes.TryHandleAccessDeniedJson(httpResult.Content))
+                            {
+                                httpResult.IsSuccess = false;
+                                httpResult.Message = httpResult.Content;
+                                httpResult.LogError(content);
+                                return httpResult;
+                            }
+
                             CRMHttpResponse acmpHttpResponse = JsonHelper.DeserializeObject<CRMHttpResponse>(httpResult.Content);
                             if (acmpHttpResponse != null && acmpHttpResponse.State != 0)
                             {
@@ -72,6 +82,11 @@ namespace HttpLib
                         else
                         {
                             httpResult.Message = await response.Content.ReadAsStringAsync();
+                            if (!string.IsNullOrEmpty(httpResult.Message))
+                            {
+                                CrmApiErrorCodes.TryHandleAccessDeniedJson(httpResult.Message);
+                            }
+
                             httpResult.LogError(content);
                         }
                     }

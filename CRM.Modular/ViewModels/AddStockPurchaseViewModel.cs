@@ -4,9 +4,11 @@ using CRM.Modular.Models;
 using HttpLib;
 using PropertyChanged;
 using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -19,7 +21,7 @@ namespace CRM.Modular.ViewModels
     }
 
     /// <summary>
-    /// 备货采购新增/编辑：<c>stockEdit</c>；产品编码来自备货汇总（<c>stockManageList</c>）。
+    /// 备货采购新增/编辑：<c>stockEdit</c>；产品编码来自备货汇总（<c>stockManageList</c>，Query 传 <c>user</c> 为当前登录账号）。
     /// </summary>
     [AddINotifyPropertyChangedInterface]
     public class AddStockPurchaseViewModel : Screen
@@ -27,6 +29,7 @@ namespace CRM.Modular.ViewModels
         private bool _isSubmitting;
 
         private readonly int? _originalShipmentType;
+        private readonly int _currentDataId;
 
         public List<PaymentPickItem> PaymentItems { get; } = new List<PaymentPickItem>
         {
@@ -58,6 +61,8 @@ namespace CRM.Modular.ViewModels
 
         public bool IsModify { get; }
 
+        public bool IsAdmin { get; }
+
         /// <summary>采购批次仅修改/查看时展示，新增不展示。</summary>
         public bool ShowPurIdRow => IsModify;
 
@@ -66,6 +71,15 @@ namespace CRM.Modular.ViewModels
 
         [DependsOn(nameof(IsViewOnly))]
         public bool CanEdit => !IsViewOnly;
+
+        /// <summary>编辑、管理员、原始为「货件到仓」且数量与剩余库存一致时显示「打回在途」（不要求当前 Record.ShipmentType 仍为到仓）。</summary>
+        public bool ShowBackToTransitButton =>
+            IsAdmin
+            && IsModify
+            && Record != null
+            && _originalShipmentType.HasValue
+            && _originalShipmentType.Value == (int)StockShipmentStatus.ArrivedWarehouse
+            && Record.Quantity == Record.StayQuantity;
 
         /// <summary>仅新增可编辑：采购时间、业务员、采购账号、产品编码、采购金额、采购数量、支付方式。</summary>
         [DependsOn(nameof(IsModify))]
@@ -92,10 +106,12 @@ namespace CRM.Modular.ViewModels
                 Title = isModify ? "修改备货采购" : "新增备货采购";
             }
             var info = IoC.Get<CacheInfo>();
+            IsAdmin = info?.IsAdmin ?? false;
 
             if (isModify && data != null)
             {
                 Record = Clone(data);
+                _currentDataId = data.Id;
                 _originalShipmentType = Record.ShipmentType;
                 // 历史 payment=2 与现约定诚意赊=1 对齐，否则下拉无法匹配
                 if (Record.Payment == 2)
@@ -110,11 +126,14 @@ namespace CRM.Modular.ViewModels
                     Payment = StockPurchaseConstants.PaymentCash,
                     UserName = info?.LoginAccount ?? "",
                 };
+                _currentDataId = 0;
                 _originalShipmentType = null;
             }
 
             SelectedPayment = PaymentItems.FirstOrDefault(p => p.Value == Record.Payment) ?? PaymentItems[0];
             SelectedShipment = ShipmentItems.FirstOrDefault(s => s.Value == Record.ShipmentType) ?? ShipmentItems[0];
+
+            Record.PropertyChanged += RecordOnPropertyChangedForBackToTransit;
 
             _ = LoadProductOptionsAsync();
             _ = LoadAccountOptionsAsync();
@@ -135,7 +154,8 @@ namespace CRM.Modular.ViewModels
         private async Task LoadProductOptionsAsync()
         {
             ProductOptions.Clear();
-            var data = await CRMRequest.StockManageList(1);
+            var loginAccount = IoC.Get<CacheInfo>()?.LoginAccount;
+            var data = await CRMRequest.StockManageList(1, 20, loginAccount);
             if (data?.List != null)
             {
                 foreach (var row in data.List.OrderBy(x => x.ProductCode))
@@ -191,6 +211,25 @@ namespace CRM.Modular.ViewModels
             {
                 Record.InstockDateTime = null;
             }
+        }
+
+        private void RecordOnPropertyChangedForBackToTransit(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(StockPurchaseRecordModel.Quantity)
+                || e.PropertyName == nameof(StockPurchaseRecordModel.StayQuantity))
+            {
+                NotifyOfPropertyChange(nameof(ShowBackToTransitButton));
+            }
+        }
+
+        protected override Task OnDeactivateAsync(bool close, CancellationToken cancellationToken)
+        {
+            if (Record != null)
+            {
+                Record.PropertyChanged -= RecordOnPropertyChangedForBackToTransit;
+            }
+
+            return base.OnDeactivateAsync(close, cancellationToken);
         }
 
         public async void Sure()
@@ -262,6 +301,20 @@ namespace CRM.Modular.ViewModels
                 return;
             }
 
+            if (Record.ShipmentType == (int)StockShipmentStatus.ArrivedWarehouse)
+            {
+                var feeText = Record.TransFee.ToString("F2", CultureInfo.InvariantCulture);
+                var confirm = MessageBox.Show(
+                    $"当前输入头程运费为{feeText}，提交后将不可修改。\n\n点「确定」提交，点「取消」返回编辑。",
+                    "提示",
+                    MessageBoxButton.OKCancel,
+                    MessageBoxImage.Warning);
+                if (confirm != MessageBoxResult.OK)
+                {
+                    return;
+                }
+            }
+
             if (!Record.PurchaseDate.HasValue)
             {
                 Record.PurchaseDate = DateTime.Now.Date;
@@ -301,6 +354,47 @@ namespace CRM.Modular.ViewModels
             return TryCloseAsync();
         }
 
+        public async void BackToTransit()
+        {
+            if (_isSubmitting)
+            {
+                return;
+            }
+
+            if (!ShowBackToTransitButton || _currentDataId <= 0)
+            {
+                return;
+            }
+
+            if (MessageBox.Show("确定将该记录打回在途吗？", "确认操作",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            _isSubmitting = true;
+            try
+            {
+                var ok = await CRMRequest.StockBackType(_currentDataId);
+                if (!ok)
+                {
+                    return;
+                }
+
+                var temp = GetView();
+                if (temp is Window win)
+                {
+                    win.DialogResult = true;
+                }
+
+                await TryCloseAsync();
+            }
+            finally
+            {
+                _isSubmitting = false;
+            }
+        }
+
         private static StockPurchaseRecordModel Clone(StockPurchaseRecordModel s)
         {
             var r = new StockPurchaseRecordModel
@@ -311,6 +405,7 @@ namespace CRM.Modular.ViewModels
                 ProductCode = s.ProductCode,
                 ProductName = s.ProductName,
                 Quantity = s.Quantity,
+                StayQuantity = s.StayQuantity,
                 Expense = s.Expense,
                 UnitValue = s.UnitValue,
                 UnitCost = s.UnitCost,

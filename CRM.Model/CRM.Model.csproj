@@ -66,6 +66,7 @@
     <Compile Include="CountryCodes.cs" />
     <Compile Include="ExcelHelp.cs" />
     <Compile Include="ExchangeModel.cs" />
+    <Compile Include="LoginResultModel.cs" />
     <Compile Include="FbmPurchaseModel.cs" />
     <Compile Include="OrderLstModel.cs" />
     <Compile Include="OrderModel.cs" />

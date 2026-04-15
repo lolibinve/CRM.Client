@@ -80,10 +80,8 @@ namespace CRM.Modular.ViewModels
             || FilterShipmentType == (int)StockShipmentStatus.Deadstock
             || FilterShipmentType == (int)StockShipmentStatus.SoldOut;
 
-        /// <summary>与编辑入口一致：仅「采购运输库存」下可删除备货流水。</summary>
-        [DependsOn(nameof(FilterShipmentType))]
-        public bool CanDeleteStockPurchase =>
-            FilterShipmentType == (int)StockShipmentStatus.InTransit;
+        /// <summary>删除按钮是否可用：按当前库存视图与勾选行实时计算。</summary>
+        public bool CanDeleteStockPurchase { get; set; }
 
         public BindableCollection<StockPurchaseRecordModel> RecordLst { get; set; } = new BindableCollection<StockPurchaseRecordModel>();
 
@@ -92,6 +90,8 @@ namespace CRM.Modular.ViewModels
         public StockPurchaseViewModel(IWindowManager manager)
         {
             windowManager = manager;
+            var info = IoC.Get<CacheInfo>();
+            IsAdmin = info?.IsAdmin ?? false;
             _ = InitAsync();
         }
 
@@ -204,6 +204,7 @@ namespace CRM.Modular.ViewModels
             statusWarehouse = type == (int)StockShipmentStatus.ArrivedWarehouse;
             statusDeadstock = type == (int)StockShipmentStatus.Deadstock;
             statusSoldOut = type == (int)StockShipmentStatus.SoldOut;
+            ReevaluateDeleteAvailability();
             await QueryBase(1);
         }
 
@@ -259,6 +260,7 @@ namespace CRM.Modular.ViewModels
                         PagesCount = pages < 1 ? 1 : pages,
                     };
                     ApplyStockListBadges(result);
+                    ReevaluateDeleteAvailability();
                 }
                 else
                 {
@@ -272,6 +274,7 @@ namespace CRM.Modular.ViewModels
                         PagesCount = 1,
                     };
                     ClearStockViewBadges();
+                    ReevaluateDeleteAvailability();
                 }
             }
             finally
@@ -306,16 +309,16 @@ namespace CRM.Modular.ViewModels
 
         public async void Delete()
         {
-            //if (!CanDeleteStockPurchase)
-            //{
-            //    MessageBox.Show("仅在「采购运输库存」视图下可删除备货采购记录。");
-            //    return;
-            //}
-
             var checkedItem = RecordLst?.FirstOrDefault(x => x.IsCheck);
             if (checkedItem == null || checkedItem.Id <= 0)
             {
                 MessageBox.Show("请先勾选要删除的备货采购记录。");
+                return;
+            }
+
+            if (!CanDeleteStockPurchase)
+            {
+                MessageBox.Show("当前勾选记录不满足删除条件。");
                 return;
             }
 
@@ -361,6 +364,36 @@ namespace CRM.Modular.ViewModels
                     }
                 }
             }
+
+            ReevaluateDeleteAvailability();
+        }
+
+        private void ReevaluateDeleteAvailability()
+        {
+            var checkedItem = RecordLst?.FirstOrDefault(x => x.IsCheck);
+            if (checkedItem == null || checkedItem.Id <= 0)
+            {
+                CanDeleteStockPurchase = false;
+                return;
+            }
+
+            // 规则：
+            // 1) 采购运输库存（type=0）可删；
+            // 2) 到仓库存（type=1）仅 quantity == stayQuantity 可删；
+            // 3) 其他库存类型均不可删。
+            if (FilterShipmentType == (int)StockShipmentStatus.InTransit)
+            {
+                CanDeleteStockPurchase = true;
+                return;
+            }
+
+            if (FilterShipmentType == (int)StockShipmentStatus.ArrivedWarehouse)
+            {
+                CanDeleteStockPurchase = checkedItem.Quantity == checkedItem.StayQuantity;
+                return;
+            }
+
+            CanDeleteStockPurchase = false;
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using HttpLib;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -42,6 +43,10 @@ namespace HttpLib.HttpClient
             headers = headers ?? new Dictionary<string, string>();
             headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.20 Safari/537.36 Edg/97.0.1072.13");
             headers.Add("Accept-Language", "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,mt;q=0.6");
+            if (!string.IsNullOrWhiteSpace(DependencyInjectionHelper.CurrentSessionId))
+            {
+                headers["X-Session-Id"] = DependencyInjectionHelper.CurrentSessionId;
+            }
 
             foreach (var key in headers.Keys)
             {

@@ -24,20 +24,31 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Button x:Name="Query" Width="88" Height="35" Content="查询"/>
+            <TextBlock Text="业务员：" Margin="0,0,8,0"
+                       Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <ComboBox Width="140" Margin="0,0,0,0"
+                      ItemsSource="{Binding RoleSource}"
+                      DisplayMemberPath="Name"
+                      SelectedItem="{Binding SelectRole, Mode=TwoWay}"
+                      Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <Button x:Name="Query" Width="88" Height="35" Content="查询" Margin="10,0,0,0"/>
             <Button x:Name="Add" Width="88" Height="35" Content="新增" Margin="10,0,0,0"/>
             <Button x:Name="Delete" Width="88" Height="35" Content="删除" Margin="10,0,0,0"/>
             <Button x:Name="UpdateStockSummary" Width="100" Height="35" Content="重新核算" Background="#b46363"  Margin="10,0,0,0" BorderThickness="0"
                     Visibility="{Binding IsAdmin, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
 
+        <TextBlock Grid.Row="1" Margin="0,0,0,8" FontSize="14"
+                   Text="{Binding SumRemainingStock, StringFormat='未摊销剩余库存资金总计：{0:N2}'}"/>
+
         <DataGrid x:Name="RecordLst"
-                  Grid.Row="1"
+                  Grid.Row="2"
                   AutoGenerateColumns="False"
                   LoadingRow="Lst_LoadingRow"
                   CanUserAddRows="False"
@@ -71,22 +82,28 @@
                 <DataGridTextColumn Header="采购运输中库存" Width="140"
                                     Binding="{Binding TransitStock, StringFormat={}{0:F0}}"
                                     ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="到仓库存" Width="120"
+                <DataGridTextColumn Header="到仓库存剩余" Width="120"
                                     Binding="{Binding WarehouseStock, StringFormat={}{0:F0}}"
                                     ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="滞销库存" Width="120"
+                <DataGridTextColumn Header="滞销库存剩余" Width="120"
                                     Binding="{Binding DeadStock, StringFormat={}{0:F0}}"
                                     ElementStyle="{x:Null}"/>
-                <DataGridTextColumn Header="售罄库存" Width="120"
+                <DataGridTextColumn Header="整批售罄库存" Width="120"
                                     Binding="{Binding SellOut, StringFormat={}{0:F0}}"
                                     ElementStyle="{x:Null}"/>
                 <DataGridTextColumn Header="累计采购数量" Width="120"
                                     Binding="{Binding SumCount, StringFormat={}{0:F0}}"
                                     ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="未售罄批次已售出数量" Width="160"
+                                    Binding="{Binding StaySum, StringFormat={}{0:F0}}"
+                                    ElementStyle="{x:Null}"/>
+                <DataGridTextColumn Header="未摊销剩余库存资金" Width="130"
+                                    Binding="{Binding SumExpense, StringFormat={}{0:F2}}"
+                                    ElementStyle="{x:Null}"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <Grid Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <Grid Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Center">
             <t:Pagination x:Name="Pagination" Height="40"
                           PageNumber="{Binding PageInfo.PageNum, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           ItemsCount="{Binding PageInfo.Total}"
@@ -96,7 +113,7 @@
                           cm:Message.Attach="[Event PageNumberChanged]= [Action Pagination_OnPageNumberChanged($source,$eventArgs)]"/>
         </Grid>
 
-        <Grid Grid.Row="0" Grid.RowSpan="3">
+        <Grid Grid.Row="0" Grid.RowSpan="4">
             <Grid.Style>
                 <Style TargetType="Grid">
                     <Style.Triggers>

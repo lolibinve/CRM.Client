@@ -56,7 +56,7 @@ namespace CRM.Modular.ViewModels
             _isSubmitting = true;
             try
             {
-                var login = IoC.Get<CacheInfo>()?.LoginAccount;
+                var login = IoC.Get<CacheInfo>()?.LoginAccount ?? "";
                 var ok = await CRMRequest.StockManageEdit(Record, login);
                 if (!ok)
                 {

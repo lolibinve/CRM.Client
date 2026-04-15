@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace HttpLib
@@ -105,6 +106,76 @@ namespace HttpLib
         public static string GetSubString(string json, string propertyName)
         {
             return JObject.Parse(json).GetValue(propertyName).ToString();
+        }
+
+        /// <summary>
+        /// 从订单单笔响应（如 <c>crm/order/edit</c> GET）中读取 <c>Data.purchaseId</c>，兼容 PascalCase/camelCase。
+        /// </summary>
+        public static string TryReadOrderPurchaseIdFromJson(string jsonContent)
+        {
+            if (string.IsNullOrWhiteSpace(jsonContent))
+            {
+                return null;
+            }
+
+            try
+            {
+                var root = JObject.Parse(jsonContent);
+                var data = root["Data"] ?? root["data"];
+                if (data == null)
+                {
+                    return null;
+                }
+
+                var t = data["purchaseId"] ?? data["PurchaseId"];
+                if (t == null || t.Type == JTokenType.Null)
+                {
+                    return null;
+                }
+
+                return t.Value<string>();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 从订单列表响应（<c>crm/order/list</c>）中读取每条 <c>Data.list[].purchaseId</c>。
+        /// </summary>
+        public static List<string> TryReadOrderListPurchaseIdsFromJson(string jsonContent)
+        {
+            if (string.IsNullOrWhiteSpace(jsonContent))
+            {
+                return null;
+            }
+
+            try
+            {
+                var root = JObject.Parse(jsonContent);
+                var data = root["Data"] ?? root["data"];
+                var list = data?["list"] as JArray;
+                if (list == null)
+                {
+                    return null;
+                }
+
+                return list.Select(item =>
+                {
+                    var t = item?["purchaseId"] ?? item?["PurchaseId"];
+                    if (t == null || t.Type == JTokenType.Null)
+                    {
+                        return null;
+                    }
+
+                    return t.Value<string>();
+                }).ToList();
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }
